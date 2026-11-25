@@ -223,6 +223,12 @@ addEventListener('DOMContentLoaded',()=>{
  const pauseFilm=document.getElementById('film-pause'), skipFilm=document.getElementById('film-skip');
  const message=filmBox.querySelector('[role=status]');
  let toolsTimer,norwegianLine=null,narrated=false;
+ // 25 Nov (Ingrid: "it takes too long when you press the button"). Online the film only began downloading on the
+ // click, about 15 s before it played. The film in the likely language now loads while the title is on screen, so the
+ // click starts it at once; choosing the other language swaps it. The version keeps browsers from mixing in old films.
+ const FILM_VERSION='20261126-hq';
+ const filmURL=l=>'assets/intro/visitor-'+l+'.mp4?v='+FILM_VERSION;
+ try{movie.preload='auto';movie.src=filmURL(V45T.lang());movie.load();}catch{}
  hagenEntry.setLanguage=value=>V45T.set(value);
  function wakeTools(){
   filmBox.classList.add('active-tools');
@@ -263,7 +269,7 @@ addEventListener('DOMContentLoaded',()=>{
   hagenEntry.quiet=quiet;filmStarted=true;requested=true;hagenEntry.requestedAt=performance.now();
   front.inert=true;front.classList.add('descending');
   filmBox.hidden=false;filmBox.focus({preventScroll:true});
-  movie.muted=quiet;movie.src='assets/intro/visitor-'+V45T.lang()+'.mp4?v=20261125-voice'; // version tag: a browser never mixes in an older film with the same name
+  movie.muted=quiet;if(movie.getAttribute('src')!==filmURL(V45T.lang()))movie.src=filmURL(V45T.lang());
   movie.play().catch(()=>{
    if(movie.error||filmFinished)return;
    message.textContent=V45T.t('Velg Spill av for å starte filmen.','Choose Play to start the film.');
@@ -294,7 +300,7 @@ addEventListener('DOMContentLoaded',()=>{
  });
  movie.addEventListener('pause',()=>{if(norwegianLine&&!filmFinished)speechSynthesis.pause();});
  movie.addEventListener('play',()=>{if(norwegianLine&&speechSynthesis.paused)speechSynthesis.resume();});
- movie.onerror=()=>{if(!filmFinished){message.textContent=V45T.t('Filmen kunne ikke åpnes. Du kan gå rett inn i hagen.','The film could not open. You can enter the garden directly.');wakeTools();}};
+ movie.onerror=()=>{if(filmStarted&&!filmFinished){message.textContent=V45T.t('Filmen kunne ikke åpnes. Du kan gå rett inn i hagen.','The film could not open. You can enter the garden directly.');wakeTools();}};
  filmBox.onpointermove=wakeTools;filmBox.onpointerdown=wakeTools;
  filmBox.addEventListener('keydown',e=>{wakeTools();if(e.key==='Escape'){e.preventDefault();finishFilm(true);}});
 

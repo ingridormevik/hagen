@@ -9812,7 +9812,7 @@ const HAGEN_VOICE_PHRASES={
   back:['walk back','go backwards','move back','walk backwards','step back'],return:['return','go back','take me back','return to the garden','go up','back to the garden'],
   follow:['follow the root','follow the roots','follow a root','follow root','follow the route','follow the routes','follow route','take me to the root'],
   enterRoots:['down','go down','enter roots','enter the roots','descend','go underground'],
-  next:['next','next root','next plant','take me to the next plant'],grow:['grow','plant','grow here','listen','i am here','i m here','hello'],
+  next:['next','next root','next plant','take me to the next plant'],grow:['grow','plant','grow here','i am here','i m here','hello'],listen:['listen','listen to the shell','listen to it','listen closely'],
   left:['look left','look to the left'],right:['look right','look to the right'],up:['look up'],down:['look down'],ahead:['look ahead','look forward','look straight ahead','centre view','center view'],
   turnLeft:['left','turn left','turn to the left'],turnRight:['right','turn right','turn to the right'],around:['turn around','turn round','turn back','reverse','reverse direction','change direction'],lookBehind:['look behind','look behind me','look behind you','look back','look backwards','look backward','look over my shoulder'],
   chooseLeft:['choose left','take the left path'],chooseRight:['choose right','take the right path'],space:['give space','let go','give it space','more space'],close:['come closer','move closer'],
@@ -10064,6 +10064,9 @@ function executeEmbodiedCommand(command){
   drive(b.pace,1);embodiedSay('Following the root down.');
  }
  else if(command==='grow')nourishEmbodiedPlant(1);
+ // 25 Nov (Ingrid: "when you go to it, you should say, listen"). Beside the shell, on foot, "listen" takes it up;
+ // anywhere else "listen" nourishes what grows, as it did before.
+ else if(command==='listen'){const S=H.threshold;if(!(S&&!S.running&&S.near&&S.armed&&H.journey?.phase==='surface'&&S.trigger?.('listen')))nourishEmbodiedPlant(1);}
  else if(command==='chooseLeft'||command==='chooseRight'){
   if(j.phase!=='roots'||j.encounter!==1){embodiedSay('That choice opens where the two roots meet. Say “follow the root” to explore.');return false;}
   chooseRootPath(command==='chooseLeft'?'left':'right');embodiedSay(command==='chooseLeft'?'The left path.':'The right path.');
@@ -22541,7 +22544,11 @@ globalThis.HagenListeningModel={create(storage,seed,now=()=>Date.now()){
   if(!C.active&&!C.start())return false;
   C.drone=true;C.lookOffset=C.aerialLook=0;say('A view from above');return true;
  };
- C.land=()=>{if(!C.drone&&C.droneBlend<=0)return false;C.drone=false;C.landing=!C.active;C.hovering=false;unready=stuckTime=0;C.recoveries=0;anchor={x:H.garden.player.x,z:H.garden.player.z};say('Returning to the garden');return true;};
+ C.land=()=>{if(!C.drone&&C.droneBlend<=0)return false;C.drone=false;C.landing=!C.active;C.hovering=false;unready=stuckTime=0;C.recoveries=0;anchor={x:H.garden.player.x,z:H.garden.player.z};
+ // 25 Nov (Ingrid: after flying "the controller ... it's like it's backwards"): landing now points the walking direction
+ // where the camera looks, as stopping the camera by hand already did, so the stick and voice walk the way you see.
+ {const b=H.embodied,g=H.garden;if(b&&g){b.heading=b.lookYaw=g.player.yaw;b.lookPitch=g.player.pitch;b.voiceDrive=0;b.speed=0;}}
+ say('Returning to the garden');return true;};
  C.voiceDiagnostics=()=>{const grammar=JSON.parse(hagenVoiceGrammar());return {fly:grammar.includes('fly'),land:grammar.includes('land'),negated:grammar.includes('do not fly'),mapped:hagenVoiceCommand('fly'),landMapped:hagenVoiceCommand('land'),negation:hagenVoiceCommand('do not fly')};};
  const interrupts=new Set(['stop','walk','thisWay','resume','faster','slower','slowPace','normalPace','fastPace','run','back','return','follow','enterRoots','next','left','right','up','down','ahead','straight','turnLeft','turnRight','around','lookBehind','body','entrance','zoomIn','zoomOut','zoomReset']);
  const command=executeEmbodiedCommand;executeEmbodiedCommand=(...args)=>{
@@ -25228,8 +25235,8 @@ AR.Detector.prototype.rotate2 = function (src, rotation) {
  // V46: all lines below are Claude drafts (English from the chat of 17 Nov, Norwegian by Claude),
  // listed in LESEARK_NORSKE_UTKAST_V45.md for Ingrid to rewrite in her own voice.
  const THRESHOLD_TEXT={
-  inviteCamera:{en:'If you wish, hold the shell to your ear.',no:'Om du vil, hold skjellet mot øret.'},  // Ingrid 24 Nov (V50 brief): "If you wish" added; was 'Hold the shell to your ear.'
-  inviteStill:{en:'Under the leaves, something hums\nin a voice I know.',no:'Under bladene nynner noe\nmed en stemme jeg kjenner.'}, // DRAFT
+  inviteCamera:{en:'If you wish, hold the shell to your ear.\nSay “listen”, or touch the shell.',no:'Om du vil, hold skjellet mot øret.\nSi «listen», eller trykk på skjellet.'}, // 25 Nov: second line added (how to enter, now that walking in no longer does)  // Ingrid 24 Nov (V50 brief): "If you wish" added; was 'Hold the shell to your ear.'
+  inviteStill:{en:'Under the leaves, something hums in a voice I know.\nSay “listen”, or touch the shell.',no:'Under bladene nynner noe med en stemme jeg kjenner.\nSi «listen», eller trykk på skjellet.'}, // DRAFT; 25 Nov: how to enter added
   ear:{en:'I know the melody\nbefore I know the words.',no:'Jeg kjenner melodien\nfør jeg kjenner ordene.'},                    // DRAFT
   line1:{en:'The roots let go.\nThey do not let go of each other.',no:'Røttene slipper taket.\nDe slipper ikke hverandre.'},    // DRAFT
   sea:{en:'The edge I kept meeting was water.\nThe ground was being carried.',no:'Kanten jeg stadig møtte, var vann.\nBakken ble båret.'}, // DRAFT
@@ -25642,7 +25649,8 @@ AR.Detector.prototype.rotate2 = function (src, rotation) {
   // tanks on deck, running lights, a bow wave and a wake. No name or markings.
   const ship=new T.Group();
   // At night the tanker is mostly a dark shape; the orange shows where its own lights fall.
-  const orange=new T.MeshStandardMaterial({color:'#8c3a16',roughness:.5,metalness:.35,emissive:'#3a1406',emissiveIntensity:.12});
+  // 25 Nov (Ingrid: "the red ship that's coming in the end"): the hull is red now (was orange #8c3a16).
+  const orange=new T.MeshStandardMaterial({color:'#a3221a',roughness:.5,metalness:.35,emissive:'#3f0806',emissiveIntensity:.14});
   const dark=new T.MeshStandardMaterial({color:'#2a0f0a',roughness:.8});
   const white=new T.MeshStandardMaterial({color:'#d8dbd6',roughness:.6,emissive:'#3a3a36',emissiveIntensity:.3});
   const hullGeo=new T.BoxGeometry(112,10,18,32,2,4);const hp=hullGeo.attributes.position;
@@ -25669,7 +25677,9 @@ AR.Detector.prototype.rotate2 = function (src, rotation) {
   const deckLight2=new T.PointLight('#ffd7a8',2.4,50,1.4);deckLight2.position.set(25,16,9);ship.add(deckLight2);
   for(let i=0;i<10;i++)lamp('#ffe2b0',-36+i*8.5,15.5,0,2.4,.7);              // floodlights along the deck
   for(let d=1;d<5;d++)for(let w=0;w<5;w++)lamp('#ffd28e',-48+w*2.2,9.4+d*3,8.5,1.1,.9);   // lit cabin windows
-  ship.position.set(-380,0,-300);ship.rotation.y=-.04;scene.add(ship);
+  // 25 Nov: at 300 m the sea fog hid the ship and it had barely moved before the camera went under. It now sails
+  // 140 m out and crosses in front of the bottle just before it sinks (see placeSea).
+  ship.position.set(-150,0,-140);ship.rotation.y=-.04;scene.add(ship);
   // Sea mist drifting low over the water.
   const MN=260,mp=new Float32Array(MN*3),ms=new Float32Array(MN);for(let i=0;i<MN;i++){mp[i*3]=(earthlineHash(i*3+1)-.5)*140;mp[i*3+1]=earthlineHash(i*5+2)*7;mp[i*3+2]=(earthlineHash(i*7+3)-.5)*140;ms[i]=earthlineHash(i*11+4);}
   const mg=new T.BufferGeometry();mg.setAttribute('position',new T.BufferAttribute(mp,3));mg.setAttribute('seed',new T.BufferAttribute(ms,1));
@@ -25901,7 +25911,7 @@ AR.Detector.prototype.rotate2 = function (src, rotation) {
   s.cam.position.set(B.x+cr(a[0],b[0],c[0],d[0],w),ride>0?Math.max(cy,waveAt(s.cam.position.x,s.cam.position.z,time,tmp2)+.07*ride):cy,B.z+cr(a[2],b[2],c[2],d[2],w));
   const lookUp=ss(.5,1,u);tmp.copy(s.float.position).lerp(B,ss(0,.25,u));tmp.x-=26*lookUp;tmp.y+=1.5*lookUp;tmp.z-=120*lookUp;s.cam.lookAt(tmp);
   s.cam.position.x+=Math.sin(time*.7)*.004*(1+u*20);s.cam.position.y+=Math.sin(time*.53)*.003*(1+u*25);
-  s.ship.position.x=-380+(t-CUT)*8;s.ship.position.y=Math.sin(time*.18)*.4;s.ship.rotation.z=Math.sin(time*.15)*.01;s.ship.rotation.x=Math.sin(time*.11)*.006;
+  s.ship.position.x=-150+(t-CUT)*9;s.ship.position.y=Math.sin(time*.18)*.4;s.ship.rotation.z=Math.sin(time*.15)*.01;s.ship.rotation.x=Math.sin(time*.11)*.006;
   s.wu.shipPos.value.copy(s.ship.position);s.wu.bottle.value.set(B.x,B.y,B.z,1-sink);
   s.wu.net.value=0;
   s.su.bottle.value.copy(s.float.position);
@@ -25992,7 +26002,9 @@ AR.Detector.prototype.rotate2 = function (src, rotation) {
     try{auGarden(g,d);}catch(e){AU.error=String(e);}
     {const cu=obj.crab.userData;cu.hide+=((d<2.5?1:0)-cu.hide)*(1-Math.exp(-step*(d<2.5?6:1.2)));cu.a+=step*.22*(1-cu.hide);
      obj.crab.position.set(Math.cos(cu.a)*.85,-.02*cu.hide,Math.sin(cu.a)*.85);obj.crab.rotation.y=-cu.a+Math.PI;cu.legs.visible=cu.hide<.55;}
-    S.near=d<NEAR||!!S.forceNear;if(d>10&&!S.forceNear)S.armed=true;
+    // 25 Nov (Ingrid: "you're walking into it even from flying"): the distance was measured along the ground only, so
+// flying over the shell counted as being beside it. Near now also means on foot (the eye within 3.2 m of the shell).
+S.near=(d<NEAR&&eye.y-tmp.y<3.2)||!!S.forceNear;if(d>10&&!S.forceNear)S.armed=true;
     shimmer.uniforms.near.value+=((d<5?1:0)-shimmer.uniforms.near.value)*(1-Math.exp(-step*2));
     obj.lift+=((S.near?1:0)-obj.lift)*(1-Math.exp(-step*1.6));
     for(const p of obj.covers){p.quaternion.setFromAxisAngle(p.userData.axis,-.9*obj.lift);}
@@ -26002,7 +26014,8 @@ AR.Detector.prototype.rotate2 = function (src, rotation) {
     // take it up as before. After a visit it opens again only once the visitor has been 10 m away (S.armed).
     if(S.near&&S.armed){
      if(!invited){invited=true;showWords(say(H.session?.cameraEnabled?'inviteCamera':'inviteStill'),9000,true);}
-     if(d<INTO||S.forceInto)S.trigger('walk-in');
+     // 25 Nov: walking into the shell no longer takes it up by accident; saying "listen" (or a click or tap) does.
+if(S.forceInto)S.trigger('walk-in');
     }else{invited=false;}
     lastEye.copy(eye);
    }
