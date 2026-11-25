@@ -1,0 +1,338 @@
+{
+  "method": "BC1/BC3 colors and scalar maps; BC5 two-channel normal maps with positive-Z reconstruction. Precomputed Lanczos mip chain; 2K dimensions preserved; original full maps retained as hardware fallback.",
+  "assets": [
+    {
+      "source": "assets/realm/earth_color.jpg",
+      "file": "assets/gpu/realm/earth_color.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT1",
+      "levels": 12,
+      "signalPSNRdB": 35.69,
+      "alphaMeanError": 0.0,
+      "bytes": 2796344,
+      "sourceSHA256": "6726cf9ad9b1be9bf284c629dd95d732527b18fc92be06ae9093a96a68f77628",
+      "sha256": "80ac0daf3018259d91a6767b133ce31aaf077fb9b86d3896869ecebc08b8d0a9"
+    },
+    {
+      "source": "assets/realm/earth_normal.jpg",
+      "file": "assets/gpu/realm/earth_normal.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "BC5",
+      "levels": 12,
+      "signalPSNRdB": 28.48,
+      "alphaMeanError": 0.0,
+      "bytes": 5592580,
+      "sourceSHA256": "8d0ad08c4d0df9aabd2fc42ef34e0d34010d9a63eb472eed214be6fad5bc2d4e",
+      "sha256": "2326805f12fe3bc1c6ce04d5541940489401b5bb8a8650936758adf49b565da6",
+      "normalMeanErrorDegrees": 7.927,
+      "normal95ErrorDegrees": 21.881,
+      "useOriginalNormal": true
+    },
+    {
+      "source": "assets/realm/earth_roughness.jpg",
+      "file": "assets/gpu/realm/earth_roughness.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT1",
+      "levels": 12,
+      "signalPSNRdB": 36.97,
+      "alphaMeanError": 0.0,
+      "bytes": 2796344,
+      "sourceSHA256": "53245bf1e48255c38bb84ad033fb1b33da317d8507c513afd3f7f4dddcfbedaf",
+      "sha256": "d73c82d99886e5b5b05bf015b07ab05df647b7182356ca2c6d9e7ae6f1a24e94"
+    },
+    {
+      "source": "assets/realm/bark_color.jpg",
+      "file": "assets/gpu/realm/bark_color.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT1",
+      "levels": 12,
+      "signalPSNRdB": 34.02,
+      "alphaMeanError": 0.0,
+      "bytes": 2796344,
+      "sourceSHA256": "285051e34826ace29f4ab438ad35cc1201b2aae0a6157a5f3c0bf6667bbc539e",
+      "sha256": "057fa3b74fc0c8721ff58d027858e3463185cd793853695c0f0d26e522403813"
+    },
+    {
+      "source": "assets/realm/bark_normal.jpg",
+      "file": "assets/gpu/realm/bark_normal.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "BC5",
+      "levels": 12,
+      "signalPSNRdB": 32.02,
+      "alphaMeanError": 0.0,
+      "bytes": 5592580,
+      "sourceSHA256": "aaba4529c3167a7811b4dbf5b4327d054a166c2fc8ea08ebd249a2692adace41",
+      "sha256": "1c326aaf5207437d074278de237ba18bfd9052cc0276707c89f6310c1f32f4f0",
+      "normalMeanErrorDegrees": 4.006,
+      "normal95ErrorDegrees": 11.614,
+      "useOriginalNormal": true
+    },
+    {
+      "source": "assets/realm/bark_roughness.jpg",
+      "file": "assets/gpu/realm/bark_roughness.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT1",
+      "levels": 12,
+      "signalPSNRdB": 38.41,
+      "alphaMeanError": 0.0,
+      "bytes": 2796344,
+      "sourceSHA256": "adafcab150c1ca99150c77198329e251437dc00fa1f66019f75624366926996e",
+      "sha256": "dbe5825ea75a1e1d03aee5b2fd1bbf8f246bb9276b1094b4d7b091e907ce907f"
+    },
+    {
+      "source": "assets/foliage/nettle_plant_color.webp",
+      "file": "assets/gpu/foliage/nettle_plant_color.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT5",
+      "levels": 12,
+      "signalPSNRdB": 41.12,
+      "alphaMeanError": 0.02155,
+      "bytes": 5592560,
+      "sourceSHA256": "ac8eedb2a31db5d3aafd32de65a2f01f18d1377be01bf17fd5c3cea38fe3989a",
+      "sha256": "d87a74ffef160772fa104b6416fa41eddfd0b2464f34e4f3cd178b7875bc4fee"
+    },
+    {
+      "source": "assets/foliage/official/nettle_plant_normal.jpg",
+      "file": "assets/gpu/foliage/official/nettle_plant_normal.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "BC5",
+      "levels": 12,
+      "signalPSNRdB": 37.54,
+      "alphaMeanError": 0.0,
+      "bytes": 5592580,
+      "sourceSHA256": "90d75c7ac70df26d6abb938e14676b0ecc08e35a596034a47f54865a5ab283a2",
+      "sha256": "40ca670e43ff95de6e892c35ef3bfdbf23b06df5f6620b0cd9b40fb5a97df40c",
+      "normalMeanErrorDegrees": 1.562,
+      "normal95ErrorDegrees": 6.093
+    },
+    {
+      "source": "assets/foliage/official/nettle_plant_arm.jpg",
+      "file": "assets/gpu/foliage/official/nettle_plant_arm.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT1",
+      "levels": 12,
+      "signalPSNRdB": 40.76,
+      "alphaMeanError": 0.0,
+      "bytes": 2796344,
+      "sourceSHA256": "94a5bcfdb6c00f3f44105e06eef9cc759e6826bf30bd3ef56c4991b18691d230",
+      "sha256": "53d54e89ffee301544ba8d99236879616ec2113e60e4aa2ff5c51f51fb0d3a36"
+    },
+    {
+      "source": "assets/foliage/fern_02_color.webp",
+      "file": "assets/gpu/foliage/fern_02_color.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT5",
+      "levels": 12,
+      "signalPSNRdB": 38.94,
+      "alphaMeanError": 0.01027,
+      "bytes": 5592560,
+      "sourceSHA256": "c43bca003cfb42750bf2564b456940cbc97a87ebf89467e63e94e55785516b48",
+      "sha256": "b67c325baa3f0684e637b30d9875b502989857a60edead2165781c1f0e7e3fdf"
+    },
+    {
+      "source": "assets/foliage/official/fern_02_normal.jpg",
+      "file": "assets/gpu/foliage/official/fern_02_normal.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "BC5",
+      "levels": 12,
+      "signalPSNRdB": 40.9,
+      "alphaMeanError": 0.0,
+      "bytes": 5592580,
+      "sourceSHA256": "dfe1ac4a428d21f7c134411500177d66b8dd800c8fec6f0040c50f44414a777b",
+      "sha256": "29e0b558729995a5f2ffa592daa1075345f05789b04e6c66ea43c1395e4776a8",
+      "normalMeanErrorDegrees": 0.816,
+      "normal95ErrorDegrees": 4.086
+    },
+    {
+      "source": "assets/foliage/official/fern_02_arm.jpg",
+      "file": "assets/gpu/foliage/official/fern_02_arm.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT1",
+      "levels": 12,
+      "signalPSNRdB": 38.04,
+      "alphaMeanError": 0.0,
+      "bytes": 2796344,
+      "sourceSHA256": "1eaf9bd29e2d83a77ca5d89bdddebcd9216b8b4ba244644580fe5b89bbe713f1",
+      "sha256": "ee504c668ea0253c5c4be87b871bf8e252f57c2e02a3d0aebdaab032178ec6f3"
+    },
+    {
+      "source": "assets/foliage/moss_01_color.webp",
+      "file": "assets/gpu/foliage/moss_01_color.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT5",
+      "levels": 12,
+      "signalPSNRdB": 43.06,
+      "alphaMeanError": 0.0003,
+      "bytes": 5592560,
+      "sourceSHA256": "10b96779b339c304e2e41356c3fa568632087324f7cb8484d5a3b4e8cdf43d16",
+      "sha256": "503db7a61d0ea016001f61c96c809bbd238ef21243012002a5a69f8cbe84ef5e"
+    },
+    {
+      "source": "assets/foliage/official/moss_01_normal.jpg",
+      "file": "assets/gpu/foliage/official/moss_01_normal.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "BC5",
+      "levels": 12,
+      "signalPSNRdB": 41.15,
+      "alphaMeanError": 0.0,
+      "bytes": 5592580,
+      "sourceSHA256": "1d8489019937af3dd4c72b6a187c84baa166d18b6712fcbb037034e04c6182e7",
+      "sha256": "195c49b014bcb5f4e9427bc3a38ff72ef0591ee7c2c331e6bec03841e025ef37",
+      "normalMeanErrorDegrees": 0.799,
+      "normal95ErrorDegrees": 3.673
+    },
+    {
+      "source": "assets/foliage/official/moss_01_arm.jpg",
+      "file": "assets/gpu/foliage/official/moss_01_arm.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT1",
+      "levels": 12,
+      "signalPSNRdB": 42.9,
+      "alphaMeanError": 0.0,
+      "bytes": 2796344,
+      "sourceSHA256": "91d01f1f37d3bc1ce9b699878dc42bd5ca7cf5508b8513607f900e643237b561",
+      "sha256": "be1b62d4cd09bb71fdadc80f452fa405eba79f51bd09af481ff4640f3057a03d"
+    },
+    {
+      "source": "assets/foliage/fir_sapling_twigs_color.webp",
+      "file": "assets/gpu/foliage/fir_sapling_twigs_color.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT5",
+      "levels": 12,
+      "signalPSNRdB": 40.54,
+      "alphaMeanError": 0.07508,
+      "bytes": 5592560,
+      "sourceSHA256": "d93c9a3bdf9ed02dee71bb38add59a0895f9adbd4c83f72031b160cc92368d76",
+      "sha256": "e19985fa426304f73f40feaad61faa63cffec1e6e1d62732c95eaaf6286c4434"
+    },
+    {
+      "source": "assets/foliage/official/fir_sapling_twigs_normal.jpg",
+      "file": "assets/gpu/foliage/official/fir_sapling_twigs_normal.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "BC5",
+      "levels": 12,
+      "signalPSNRdB": 36.57,
+      "alphaMeanError": 0.0,
+      "bytes": 5592580,
+      "sourceSHA256": "bbeffa70891cc0a4ec8571f443cbb915b0d4d4d5ac079cea0d21a22183ded825",
+      "sha256": "242128d70ec1a527555c70df30c80ef4947fe0e33bbc2274483ad71948f2961c",
+      "normalMeanErrorDegrees": 1.604,
+      "normal95ErrorDegrees": 6.61
+    },
+    {
+      "source": "assets/foliage/official/fir_sapling_twigs_arm.jpg",
+      "file": "assets/gpu/foliage/official/fir_sapling_twigs_arm.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT1",
+      "levels": 12,
+      "signalPSNRdB": 41.57,
+      "alphaMeanError": 0.0,
+      "bytes": 2796344,
+      "sourceSHA256": "3b3bfbc5f5b19834afb9c3dda9edd5c3fcf7b3f36c2f4da2bee7368b011b1986",
+      "sha256": "0277533ae55c753f247a4316bec9ff0b28312eea7a6620005abc173f6446fc18"
+    },
+    {
+      "source": "assets/foliage/fir_sapling_branches_color.jpg",
+      "file": "assets/gpu/foliage/fir_sapling_branches_color.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT1",
+      "levels": 12,
+      "signalPSNRdB": 38.16,
+      "alphaMeanError": 0.0,
+      "bytes": 2796344,
+      "sourceSHA256": "e2cbeab3fae3b3c059b084e28773ce16da99994de019db7b1f6738a50bd77a75",
+      "sha256": "ea598d92c966a987722023efaa143fe39d4ccf92f484472af736d9ac6f7a5929"
+    },
+    {
+      "source": "assets/foliage/official/fir_sapling_branches_normal.jpg",
+      "file": "assets/gpu/foliage/official/fir_sapling_branches_normal.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "BC5",
+      "levels": 12,
+      "signalPSNRdB": 34.76,
+      "alphaMeanError": 0.0,
+      "bytes": 5592580,
+      "sourceSHA256": "9fcb580665cff5c06ea77056f29b4b74fd54b046dd1371eda71814dbbc501aef",
+      "sha256": "e82f743878b93cbaa16e6de1b9a5b97b5b4da00e6a7e46b84773cd161e04d870",
+      "normalMeanErrorDegrees": 2.586,
+      "normal95ErrorDegrees": 7.358,
+      "useOriginalNormal": true
+    },
+    {
+      "source": "assets/foliage/official/fir_sapling_branches_arm.jpg",
+      "file": "assets/gpu/foliage/official/fir_sapling_branches_arm.dds",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "format": "DXT1",
+      "levels": 12,
+      "signalPSNRdB": 35.08,
+      "alphaMeanError": 0.0,
+      "bytes": 2796344,
+      "sourceSHA256": "2d6fc027508952d703cb9b59dd7b9e2727841bac0199a1bb0ad2d9efc09ff74d",
+      "sha256": "7b92ba9dfdb35ade82eec5407e529aa3f517e9dcbc67ae9fe086676abec41bd0"
+    }
+  ],
+  "qualityPolicy": "Retain original normal maps when BC5 mean error exceeds1.8degrees or95th-percentile error exceeds7degrees."
+}

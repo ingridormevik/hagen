@@ -1,0 +1,229 @@
+{
+  "license": "CC0-1.0",
+  "official_metadata": "https://api.polyhaven.com/files/{asset}",
+  "sources": [
+    {
+      "asset": "nettle_plant",
+      "name": "nettle_plant",
+      "channel": "color",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/nettle_plant/nettle_plant_diff_2k.jpg",
+      "md5": "bd08db8a634d02c12a0cf4f4daac8937",
+      "file": "official/nettle_plant_color.jpg",
+      "sha256": "7baf0c5bf0695ddbba590baba686e284803244703959092526eb2bc226724351"
+    },
+    {
+      "asset": "nettle_plant",
+      "name": "nettle_plant",
+      "channel": "normal",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/nettle_plant/nettle_plant_nor_gl_2k.jpg",
+      "md5": "f9c7a2f400685159583a75221e06bfa8",
+      "file": "official/nettle_plant_normal.jpg",
+      "sha256": "90d75c7ac70df26d6abb938e14676b0ecc08e35a596034a47f54865a5ab283a2"
+    },
+    {
+      "asset": "nettle_plant",
+      "name": "nettle_plant",
+      "channel": "arm",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/nettle_plant/nettle_plant_arm_2k.jpg",
+      "md5": "dee323f552417bf65614c1f9bbb73214",
+      "file": "official/nettle_plant_arm.jpg",
+      "sha256": "94a5bcfdb6c00f3f44105e06eef9cc759e6826bf30bd3ef56c4991b18691d230"
+    },
+    {
+      "asset": "nettle_plant",
+      "name": "nettle_plant",
+      "channel": "alpha",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/nettle_plant/nettle_plant_alpha_2k.png",
+      "md5": "e41081a23ef3480364649e152b0a09b3",
+      "file": "official/nettle_plant_alpha.png",
+      "sha256": "0efece04fcc2780e7a13cd92ad3acd8eb7ad5f84fc4b66beb4402af06b229434"
+    },
+    {
+      "asset": "fern_02",
+      "name": "fern_02",
+      "channel": "color",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fern_02/fern_02_diff_2k.jpg",
+      "md5": "ba8bbb9dc9ff55bdc081565cd926d776",
+      "file": "official/fern_02_color.jpg",
+      "sha256": "9ee18172170728050871772e2cd6d8d37b52f9138e61b49b04486623f9caf84b"
+    },
+    {
+      "asset": "fern_02",
+      "name": "fern_02",
+      "channel": "normal",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fern_02/fern_02_nor_gl_2k.jpg",
+      "md5": "00936dff4661dc9fe1f2fbe6c000615a",
+      "file": "official/fern_02_normal.jpg",
+      "sha256": "dfe1ac4a428d21f7c134411500177d66b8dd800c8fec6f0040c50f44414a777b"
+    },
+    {
+      "asset": "fern_02",
+      "name": "fern_02",
+      "channel": "arm",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fern_02/fern_02_arm_2k.jpg",
+      "md5": "7f7b46e813a3cb4811405191de0ecdce",
+      "file": "official/fern_02_arm.jpg",
+      "sha256": "1eaf9bd29e2d83a77ca5d89bdddebcd9216b8b4ba244644580fe5b89bbe713f1"
+    },
+    {
+      "asset": "fern_02",
+      "name": "fern_02",
+      "channel": "alpha",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/fern_02/fern_02_alpha_2k.png",
+      "md5": "ff18f7e8e869c58eac8f9c7d7c519f4a",
+      "file": "official/fern_02_alpha.png",
+      "sha256": "f51eb9b8f9f4b25a882f8fe12d1ef53ba69448bac7e71396ec1f05b684e9ea75"
+    },
+    {
+      "asset": "moss_01",
+      "name": "moss_01",
+      "channel": "color",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/moss_01/moss_01_diff_2k.jpg",
+      "md5": "268c4ea561fa189fead481250ab5835c",
+      "file": "official/moss_01_color.jpg",
+      "sha256": "75acf965b37418e1f35401a307d759bb2f7171f231e88e0c327f94d142d2499a"
+    },
+    {
+      "asset": "moss_01",
+      "name": "moss_01",
+      "channel": "normal",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/moss_01/moss_01_nor_gl_2k.jpg",
+      "md5": "96db55f825bbaefa2ded5c8d1cc6abbe",
+      "file": "official/moss_01_normal.jpg",
+      "sha256": "1d8489019937af3dd4c72b6a187c84baa166d18b6712fcbb037034e04c6182e7"
+    },
+    {
+      "asset": "moss_01",
+      "name": "moss_01",
+      "channel": "arm",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/moss_01/moss_01_arm_2k.jpg",
+      "md5": "427fabe137e96a5e9f9087fc2220407c",
+      "file": "official/moss_01_arm.jpg",
+      "sha256": "91d01f1f37d3bc1ce9b699878dc42bd5ca7cf5508b8513607f900e643237b561"
+    },
+    {
+      "asset": "moss_01",
+      "name": "moss_01",
+      "channel": "alpha",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/moss_01/moss_01_alpha_2k.png",
+      "md5": "838476c334c1c70807d9c3b999b81186",
+      "file": "official/moss_01_alpha.png",
+      "sha256": "43b8d86ec306f39bc9c896906d16aadfb20d00c1c773c9bcdc3122b6eff8a6d0"
+    },
+    {
+      "asset": "fir_sapling",
+      "name": "fir_sapling_twigs",
+      "channel": "color",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fir_sapling/fir_sapling_twigs_diff_2k.jpg",
+      "md5": "8f4dc0996acb0fa5082e5841407ffde9",
+      "file": "official/fir_sapling_twigs_color.jpg",
+      "sha256": "cf1e9852128dc6a6825fd4e40025dfa53b01c9ed049ae3431dbfe7420fde9547"
+    },
+    {
+      "asset": "fir_sapling",
+      "name": "fir_sapling_twigs",
+      "channel": "normal",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fir_sapling/fir_sapling_twigs_nor_gl_2k.jpg",
+      "md5": "76329d0fbef7976c898c768b1dff38d1",
+      "file": "official/fir_sapling_twigs_normal.jpg",
+      "sha256": "bbeffa70891cc0a4ec8571f443cbb915b0d4d4d5ac079cea0d21a22183ded825"
+    },
+    {
+      "asset": "fir_sapling",
+      "name": "fir_sapling_twigs",
+      "channel": "arm",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fir_sapling/fir_sapling_twigs_arm_2k.jpg",
+      "md5": "5ccdd7aa2c40e20bd7647a66d3306825",
+      "file": "official/fir_sapling_twigs_arm.jpg",
+      "sha256": "3b3bfbc5f5b19834afb9c3dda9edd5c3fcf7b3f36c2f4da2bee7368b011b1986"
+    },
+    {
+      "asset": "fir_sapling",
+      "name": "fir_sapling_twigs",
+      "channel": "alpha",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/fir_sapling/fir_sapling_twigs_alpha_2k.png",
+      "md5": "811064f646754026bdcdcdcfe5368abb",
+      "file": "official/fir_sapling_twigs_alpha.png",
+      "sha256": "c26331c7e53e911c49e587c6108c1b97f63fa6bc86c9d090cee3e9892783bf08"
+    },
+    {
+      "asset": "fir_sapling",
+      "name": "fir_sapling_branches",
+      "channel": "color",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fir_sapling/fir_sapling_branches_diff_2k.jpg",
+      "md5": "83c6029f4e7c124c68a6b5269e6d214a",
+      "file": "official/fir_sapling_branches_color.jpg",
+      "sha256": "e2cbeab3fae3b3c059b084e28773ce16da99994de019db7b1f6738a50bd77a75"
+    },
+    {
+      "asset": "fir_sapling",
+      "name": "fir_sapling_branches",
+      "channel": "normal",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fir_sapling/fir_sapling_branches_nor_gl_2k.jpg",
+      "md5": "71ed83f58a42d1d896de0e58e0ab630d",
+      "file": "official/fir_sapling_branches_normal.jpg",
+      "sha256": "9fcb580665cff5c06ea77056f29b4b74fd54b046dd1371eda71814dbbc501aef"
+    },
+    {
+      "asset": "fir_sapling",
+      "name": "fir_sapling_branches",
+      "channel": "arm",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fir_sapling/fir_sapling_branches_arm_2k.jpg",
+      "md5": "5effd466021fa7300d596e09996b3ef1",
+      "file": "official/fir_sapling_branches_arm.jpg",
+      "sha256": "2d6fc027508952d703cb9b59dd7b9e2727841bac0199a1bb0ad2d9efc09ff74d"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "nettle_plant_color.webp",
+      "sha256": "ac8eedb2a31db5d3aafd32de65a2f01f18d1377be01bf17fd5c3cea38fe3989a",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "alpha": true,
+      "packing": "RGB pixels plus official alpha, verified lossless"
+    },
+    {
+      "file": "fern_02_color.webp",
+      "sha256": "c43bca003cfb42750bf2564b456940cbc97a87ebf89467e63e94e55785516b48",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "alpha": true,
+      "packing": "RGB pixels plus official alpha, verified lossless"
+    },
+    {
+      "file": "moss_01_color.webp",
+      "sha256": "10b96779b339c304e2e41356c3fa568632087324f7cb8484d5a3b4e8cdf43d16",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "alpha": true,
+      "packing": "RGB pixels plus official alpha, verified lossless"
+    },
+    {
+      "file": "fir_sapling_twigs_color.webp",
+      "sha256": "d93c9a3bdf9ed02dee71bb38add59a0895f9adbd4c83f72031b160cc92368d76",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "alpha": true,
+      "packing": "RGB pixels plus official alpha, verified lossless"
+    },
+    {
+      "file": "fir_sapling_branches_color.jpg",
+      "sha256": "e2cbeab3fae3b3c059b084e28773ce16da99994de019db7b1f6738a50bd77a75",
+      "pixels": [
+        2048,
+        2048
+      ],
+      "alpha": false,
+      "packing": "Original official JPEG"
+    }
+  ]
+}

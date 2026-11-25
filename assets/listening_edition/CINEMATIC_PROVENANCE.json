@@ -1,0 +1,36 @@
+{
+  "edition": "V26 Listening Garden",
+  "protected_files": 191,
+  "protected_unchanged": true,
+  "entry": "HAGEN_V26_CINEMATIC.html",
+  "engine": "HAGEN_V26_CINEMATIC_ENGINE.html",
+  "engine_sha256": "2b30fa61330df1b4dc2f4818b386e4974a654d6f7aee34517e7f1611e4aff091",
+  "entry_sha256": "336d6a9b634466b4cedcddccae3789cb46852128961e731e286b3e64051f0695",
+  "frozen_base_sha256": "33ecdaad61ad624d9d7fed524fadd5db7b1e9d3d43aadabbc3b401a0cfbdb5d9",
+  "audio_source": "C:\\Users\\berge\\Downloads\\05_Lyd\\HAGEN_Nordic_Rainforest_Pulse_8D_full.mp3",
+  "audio_source_sha256": "99aeea7c3bed3fbfb6bd87e792b15e11f85749d3141460e175d4fd95980eb4d6",
+  "audio": [
+    {
+      "file": "breath.mp3",
+      "sha256": "2ac1e8d81e68cb14488c292e404f05cf7f201dd9ee0ac2f288fd367cc897df71",
+      "source_start": 38,
+      "rate": 0.72,
+      "lowpass": 2100
+    },
+    {
+      "file": "roots.mp3",
+      "sha256": "6aeab4d834d798ef182a932a0121db80f1447b9afc3e97b9a40862a4a0df1919",
+      "source_start": 108,
+      "rate": 0.62,
+      "lowpass": 1350
+    },
+    {
+      "file": "distant.mp3",
+      "sha256": "f4ed2a603a81dd50e8fb314a6798e8f6393e2598ba6723588e8933037e834cbe",
+      "source_start": 177,
+      "rate": 0.76,
+      "lowpass": 1750
+    }
+  ],
+  "reference_note": "Siren Abyss reference named in handoff was not found in Downloads. Included fragments are processed excerpts of the artist’s own Nordic recording; no equivalence to the missing reference is claimed."
+}

@@ -1,0 +1,296 @@
+{
+ "note": "Sources for HAGEN ambience layers (23 Nov 2026). One entry per file in this folder. Real field recordings, all CC0; no generated sound. Claude cannot listen: excerpts were chosen from the loudness curve and are all marked listened=false for Ingrid to check and replace.",
+ "files": [
+  {
+   "file": "surface_wind_leaves.mp3",
+   "title": "Wind(leaves).WAV",
+   "author": "o_ciz",
+   "source_url": "https://freesound.org/people/o_ciz/sounds/475448/",
+   "download_url": "https://cdn.freesound.org/previews/475/475448_7009965-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "32334DB89C207004F5F290EC94D775670FFA846F3F63E33DA3065BED5346DEF8",
+   "downloaded": "2026-11-17 (session of 17 Nov), reused",
+   "listened": false,
+   "excerpt_s": [
+    52.64,
+    115.64
+   ],
+   "processing": "seamless loop of 60.0 s (3 s crossfade at the seam), loudness normalised to -20 LUFS",
+   "note": ""
+  },
+  {
+   "file": "surface_steps_wet.mp3",
+   "title": "Walking through wet forest",
+   "author": "NachtmahrTV",
+   "source_url": "https://freesound.org/people/NachtmahrTV/sounds/553227/",
+   "download_url": "https://cdn.freesound.org/previews/553/553227_5620304-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "F0B99FC91CFD9768B15CC6CB5C54254DD4CB9FE25153FB6C5F17B74C34F802D3",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    6.89,
+    22.89
+   ],
+   "processing": "seamless loop of 15.0 s (1 s crossfade at the seam), loudness normalised to -20 LUFS",
+   "note": ""
+  },
+  {
+   "file": "roots_resonance.mp3",
+   "title": "Cavern Drips, Stones and Deep Rumbles — by GLORB",
+   "author": "bassimat",
+   "source_url": "https://freesound.org/people/bassimat/sounds/867586/",
+   "download_url": "https://cdn.freesound.org/previews/867/867586_15636277-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "BCDD3A770CF5BA6F5CDCF8907E74534E30F680891D8B68D8AE6D585B1D90E16C",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    28.5,
+    91.5
+   ],
+   "processing": "lowpass=f=700, seamless loop of 60.0 s (3 s crossfade at the seam), loudness normalised to -24 LUFS",
+   "note": ""
+  },
+  {
+   "file": "algorithm_datacenter.mp3",
+   "title": "SFX-Roomtone, Server Room, Hum",
+   "author": "soundandmelodies",
+   "source_url": "https://freesound.org/people/soundandmelodies/sounds/776267/",
+   "download_url": "https://cdn.freesound.org/previews/776/776267_10924423-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "EE73E6114FA7AA7E44DC8A254A8D93CCEF4152051589409415751E488C8CFC4A",
+   "downloaded": "2026-11-17 (session of 17 Nov), reused",
+   "listened": false,
+   "excerpt_s": [
+    10.52,
+    73.52
+   ],
+   "processing": "seamless loop of 60.0 s (3 s crossfade at the seam), loudness normalised to -22 LUFS",
+   "note": ""
+  },
+  {
+   "file": "owl_call_1.mp3",
+   "title": "Tawny owl hooting",
+   "author": "Patrick_Corra",
+   "source_url": "https://freesound.org/people/Patrick_Corra/sounds/745208/",
+   "download_url": "https://cdn.freesound.org/previews/745/745208_8711646-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "B0964FD40D099AC3D4E000A6DD3EE76C75BCA44EDD329382FDA04DFA3673D242",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    26.65,
+    31.15
+   ],
+   "processing": "cut, fades 0.12/0.35 s, peak normalised to -3 dBFS (gain +5.6 dB)",
+   "note": ""
+  },
+  {
+   "file": "owl_call_2.mp3",
+   "title": "Tawny Owl Calling at Night – 02:30, Estonia",
+   "author": "inspire153",
+   "source_url": "https://freesound.org/people/inspire153/sounds/867131/",
+   "download_url": "https://cdn.freesound.org/previews/867/867131_16094772-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "8D449B3CAA2324F002FD110A4C9CBAED7AC8CBDE60EDAF337FB206423899C53E",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    6.2,
+    10.7
+   ],
+   "processing": "cut, fades 0.12/0.35 s, peak normalised to -3 dBFS (gain +21.8 dB)",
+   "note": ""
+  },
+  {
+   "file": "owl_call_3.mp3",
+   "title": "Tawny Owl in Molkom, Sweden - Cleaned",
+   "author": "sound368",
+   "source_url": "https://freesound.org/people/sound368/sounds/864872/",
+   "download_url": "https://cdn.freesound.org/previews/864/864872_4846901-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "301A441929050252A132ECC27C2F2A34693E7BE34E9FB560E4532AB94F582B98",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    5.3,
+    9.8
+   ],
+   "processing": "cut, fades 0.12/0.35 s, peak normalised to -3 dBFS (gain +19.7 dB)",
+   "note": ""
+  },
+  {
+   "file": "woodcock_1.mp3",
+   "title": "Chocha perdiz (Scolopax rusticola) y Mosquitero común (Phylloscopus collybita).mp3",
+   "author": "ChristianSW",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Chocha_perdiz_(Scolopax_rusticola)_y_Mosquitero_com%C3%BAn_(Phylloscopus_collybita).mp3",
+   "download_url": "https://upload.wikimedia.org/wikipedia/commons/9/97/Chocha_perdiz_%28Scolopax_rusticola%29_y_Mosquitero_com%C3%BAn_%28Phylloscopus_collybita%29.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Wikimedia Commons original file",
+   "source_sha256": "6A9B0BA2D0B973F7E25B83F4F61FE6AE87978D5F8DE791B51E29A29D88C8FE36",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    0,
+    6.35
+   ],
+   "processing": "cut, fades 0.1/0.4 s, peak normalised to -3 dBFS (gain +13.4 dB)",
+   "note": "The title says the recording also has a chiffchaff (Phylloscopus collybita); the whole file is used. Ingrid to listen."
+  },
+  {
+   "file": "nightjar_churr.mp3",
+   "title": "European Nightjar Nattskärra (Caprimulgus europaeus).wav",
+   "author": "joakgust",
+   "source_url": "https://freesound.org/people/joakgust/sounds/548490/",
+   "download_url": "https://cdn.freesound.org/previews/548/548490_2762515-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "AAE61F04CCA75946AFF2402ADA06F9F97EF147713C2ED65233FDA5E757C2B020",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    90.85,
+    102.85
+   ],
+   "processing": "cut, fades 0.6/1.2 s, peak normalised to -3 dBFS (gain +9.1 dB)",
+   "note": ""
+  },
+  {
+   "file": "roots_creak_1.mp3",
+   "title": "Wood Creak Single V10",
+   "author": "Rudmer_Rotteveel",
+   "source_url": "https://freesound.org/people/Rudmer_Rotteveel/sounds/506665/",
+   "download_url": "https://cdn.freesound.org/previews/506/506665_4921277-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "11975C80E5DCF3937EDED1A4B31927061FB632D925E8118AF4DE3F6E96D51306",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    0,
+    1.19
+   ],
+   "processing": "cut, fades 0.02/0.12 s, peak normalised to -3 dBFS (gain +3.1 dB)",
+   "note": ""
+  },
+  {
+   "file": "roots_creak_2.mp3",
+   "title": "2022-02-06 wood creak 1.wav",
+   "author": "sit_walk",
+   "source_url": "https://freesound.org/people/sit_walk/sounds/618085/",
+   "download_url": "https://cdn.freesound.org/previews/618/618085_11204664-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "89E7905E4BFBF145C125AE5D1B5963DB32784F9BC2B41DD9C4758447DA95623B",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    0,
+    1.91
+   ],
+   "processing": "cut, fades 0.02/0.12 s, peak normalised to -3 dBFS (gain +2.1 dB)",
+   "note": ""
+  },
+  {
+   "file": "roots_creak_3.mp3",
+   "title": "Creaking in Room 8.wav",
+   "author": "Greg_Surr",
+   "source_url": "https://freesound.org/people/Greg_Surr/sounds/590171/",
+   "download_url": "https://cdn.freesound.org/previews/590/590171_8198141-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "FC553641B9C0B58AE76937FB3E2C8FF07890EDD7A5E0B2FA3F12E5D81B8305CB",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    0,
+    2.97
+   ],
+   "processing": "cut, fades 0.02/0.12 s, peak normalised to -3 dBFS (gain +11.6 dB)",
+   "note": ""
+  },
+  {
+   "file": "roots_drips_1.mp3",
+   "title": "Water Dripping in Cave.wav",
+   "author": "Sclolex",
+   "source_url": "https://freesound.org/people/Sclolex/sounds/177958/",
+   "download_url": "https://cdn.freesound.org/previews/177/177958_985466-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "22F25FCC66C6CB66AF9E1583F4891911654425CA6CFEA7B96285AA39DDE99F40",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    66.45,
+    68.05
+   ],
+   "processing": "cut, fades 0.01/0.5 s, peak normalised to -3 dBFS (gain +12.0 dB)",
+   "note": ""
+  },
+  {
+   "file": "roots_drips_2.mp3",
+   "title": "Water Dripping in Cave.wav",
+   "author": "Sclolex",
+   "source_url": "https://freesound.org/people/Sclolex/sounds/177958/",
+   "download_url": "https://cdn.freesound.org/previews/177/177958_985466-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "22F25FCC66C6CB66AF9E1583F4891911654425CA6CFEA7B96285AA39DDE99F40",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    71.25,
+    72.85
+   ],
+   "processing": "cut, fades 0.01/0.5 s, peak normalised to -3 dBFS (gain +8.4 dB)",
+   "note": ""
+  },
+  {
+   "file": "roots_drips_3.mp3",
+   "title": "Water Dripping in Cave.wav",
+   "author": "Sclolex",
+   "source_url": "https://freesound.org/people/Sclolex/sounds/177958/",
+   "download_url": "https://cdn.freesound.org/previews/177/177958_985466-hq.mp3",
+   "license": "CC0-1.0",
+   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "variant": "Freesound HQ MP3 preview, not the original WAV",
+   "source_sha256": "22F25FCC66C6CB66AF9E1583F4891911654425CA6CFEA7B96285AA39DDE99F40",
+   "downloaded": "2026-11-23",
+   "listened": false,
+   "excerpt_s": [
+    76.2,
+    77.8
+   ],
+   "processing": "cut, fades 0.01/0.5 s, peak normalised to -3 dBFS (gain +12.9 dB)",
+   "note": ""
+  }
+ ],
+ "not_used": [
+  {
+   "file": "sea_waves.mp3 / sea_hum.mp3",
+   "why": "the old bottle-at-sea scene is replaced by the Norskehavet ending, which has its own sea sound"
+  }
+ ]
+}

@@ -1,0 +1,36 @@
+{
+  "library": "https://github.com/zeux/meshoptimizer",
+  "version": "1.3.0",
+  "originalBytes": 21677180,
+  "compressedBytes": 13135412,
+  "losslessAttributesVerified": true,
+  "triangleTopologyVerified": true,
+  "sources": [
+    {
+      "file": "assets/realtrees/fir_sapling/fir_sapling.gltf",
+      "sha256": "a9466ca9d8c5b9b2eeeeafd3ce426f8912dcbd98a7281bad8c734833eb35b186"
+    },
+    {
+      "file": "assets/realtrees/fir_sapling/fir_sapling.bin",
+      "sha256": "efdebfae6ee4b3ea20c7a85eb9f798ff4953259a3616bcff0b7e580b00f34f40"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "assets/optimized/fir_sapling.gltf",
+      "sha256": "6ae5ce8b66de54ae807f60c85b248ca6a85338f40df92adf707d1e061a1af7b7"
+    },
+    {
+      "file": "assets/optimized/fir_sapling.meshopt.bin",
+      "sha256": "cf47e7565292e6b9eb5e3efc569735bb79687150387973f27477a8d9fe700d25"
+    },
+    {
+      "file": "assets/optimized/fir_sapling.lods.bin",
+      "sha256": "c2b964ae2581f677f53555066f5c66a34a926e5a8ca6499bb9b15cbeeb11ae36"
+    },
+    {
+      "file": "assets/optimized/fir_sapling.lods.json",
+      "sha256": "06b28e22459464d91c73b48560ac41d08408b58127b8e185e57132f2f519ca84"
+    }
+  ]
+}

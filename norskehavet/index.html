@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>HAGEN: Norskehavet</title>
+<!-- V48 ending (Ingrid 19 Nov: "use the one in Downloads ... adjust it to the setting of the garden").
+     From "HAGEN_ Easter egg draft.zip" (Downloads, 19 Nov 23:37), adapted: opened from the garden as
+     its ending (?embedded=1, no ENTER screen), the garden's own song file, fonts and three.js kept
+     locally (works offline), the garden's real weather and language, the line style of the garden,
+     and the garden's own forms at the start (pearl membranes, golden mushrooms, glowing roots).
+     Opened on its own (no ?embedded) it still works as before, with its ENTER screen. -->
+<style>
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:400;font-display:swap;src:url(../assets/fonts/cormorant-garamond-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:400;font-display:swap;src:url(../assets/fonts/cormorant-garamond-latin-400-italic.woff2) format('woff2')}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:500;font-display:swap;src:url(../assets/fonts/cormorant-garamond-latin-500-italic.woff2) format('woff2')}
+/* the garden's line style: the position line's warm colour, each word drawn in with a passing light */
+#line .w{display:inline-block;opacity:0;animation:w48 1.8s ease forwards;white-space:pre}
+@keyframes w48{0%{opacity:0;transform:translateY(.08em)}55%{opacity:1;text-shadow:0 0 12px rgba(195,208,177,.45),0 1px 10px #000}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#line .w{animation:none;opacity:1}}
+#veil{position:fixed;inset:0;background:#000;z-index:9;pointer-events:none;opacity:0;transition:opacity 2.2s ease}
+body.embedded #veil{display:none}
+body.embedded #intro{display:none}
+/* VOICE: tender, slow, cinematic. IDEA: a garden in a bottle in the Norwegian Sea.
+   PICTURE: the whole screen is the world. COLOUR: cold pale soil, near-black growth, gold light.
+   TYPE: Cormorant Garamond italic. LAYOUT: full-bleed canvas, one line of text at a time. */
+html,body{margin:0;height:100%;background:#050607;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+canvas{display:block}
+.serif{font-family:'Cormorant Garamond',serif;color:#efe6d2}
+#corner{position:fixed;top:18px;right:22px;font-style:italic;font-size:15px;opacity:.7;pointer-events:none;transition:opacity 3s}
+#line{white-space:pre-line;position:fixed;left:50%;bottom:14%;transform:translateX(-50%);width:min(86vw,680px);text-align:center;font-size:clamp(21px,1.6vw,26px);font-style:italic;line-height:1.65;color:#e0dcc8;letter-spacing:.01em;opacity:0;transition:opacity 2.4s ease;pointer-events:none;text-shadow:0 1px 10px #000,0 0 24px rgba(0,0,0,.8)}
+#intro,#outro{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#10151a 0%,#040506 75%);transition:opacity 1.8s ease;z-index:5}
+#outro{background:transparent;opacity:0;pointer-events:none;justify-content:flex-start;padding-top:9vh}
+h1{font-weight:400;letter-spacing:.42em;font-size:clamp(28px,5vw,46px);margin:0 0 6px;padding-left:.42em}
+.sub{font-style:italic;opacity:.7;font-size:17px;margin-bottom:34px}
+button{font-family:inherit;font-size:17px;letter-spacing:.2em;color:#efe6d2;background:transparent;border:1px solid rgba(232,194,122,.55);padding:11px 30px;min-height:44px;cursor:pointer;border-radius:2px}
+button:hover,button:focus-visible{background:rgba(232,194,122,.12);outline:none}
+.hint{margin-top:26px;font-size:14px;opacity:.5;font-style:italic;text-align:center;line-height:1.6}
+/* 24 Nov (Ingrid's V50 brief, "clear ways to ... leave or return"): the way back while the shell film plays, quiet like the
+   weather line in the other corner. Shown only when opened from the garden; hidden again when RETURN TO THE GARDEN appears. */
+#back{display:none;position:fixed;top:12px;left:14px;z-index:6;border:0;padding:10px 12px;min-height:44px;font-size:15px;font-style:italic;letter-spacing:.04em;opacity:.6;transition:opacity .6s}
+#back.on{display:block}
+#back:hover,#back:focus-visible{opacity:1}
+</style>
+<style id="hagen-root-cursor-style">@media(hover:hover) and (pointer:fine){html,body,body *{cursor:url("../root-cursor.svg") 16 3,auto!important}}#hagen-seed-cursor{display:none!important}</style></head>
+<body>
+<script>try{if(/[?&]embedded=1\b/.test(location.search))document.body.classList.add('embedded');}catch(e){}</script>
+<div id="veil"></div>
+<div id="corner" class="serif">Rain reaches the roots</div>
+<div id="line" class="serif"></div>
+<div id="intro" class="serif">
+  <h1>HAGEN</h1>
+  <div class="sub">a listening garden</div>
+  <button id="enter">ENTER</button>
+  <div class="hint">Headphones recommended<br>Hold and drag, or use WASD / arrows, to walk</div>
+</div>
+<div id="outro" class="serif">
+  <h1 style="font-size:clamp(22px,4vw,34px)">HAGEN</h1>
+  <div class="sub">Norskehavet</div>
+  <button id="again">RETURN TO THE GARDEN</button>
+</div>
+<button id="back" class="serif" type="button" aria-label="Back to the garden">← the garden</button>
+
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js","three/addons/":"./vendor/three/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {RGBELoader} from 'three/addons/loaders/RGBELoader.js';
+// ---- V48: what the garden hands over when it opens its ending (window.hagenEnding on the page that
+// holds this frame): the visitor's language, the real weather, the shared sound, and the way back. ----
+const EMB=/[?&]embedded=1\b/.test(location.search);
+const BR=(()=>{try{return EMB?parent.hagenEnding||null:null}catch(e){return null}})();
+const LANG=BR?(BR.lang==='en'?'en':'no'):'en';
+document.documentElement.lang=LANG==='no'?'nb':'en';
+const WXK=!!BR?.weather, RAIN=WXK?Math.min(1,Math.max(0,+BR.weather.rain||0)):.6, TEMP=WXK&&Number.isFinite(BR.weather.temp)?BR.weather.temp:null;
+const SNOW=TEMP!==null&&TEMP<=.5&&RAIN>.05, FROST=TEMP===null?0:Math.min(1,Math.max(0,(1.5-TEMP)/5));
+// ---- Hagen's own assets: Poly Haven fern, mossy rocks, pine roots, fallen log, earth, bark, stone, misty pines HDR ----
+const gathering=LANG==='no'?'HAGEN VÅKNER':'GATHERING THE GARDEN',enterLabel=LANG==='no'?'GÅ INN':'ENTER';
+const enterBtn=document.getElementById('enter');enterBtn.disabled=true;enterBtn.textContent=gathering;
+if(LANG==='no'){document.querySelector('#intro .sub').textContent='en lyttende hage';document.querySelector('#intro .hint').innerHTML='Hodetelefoner anbefales<br>Hold og dra, eller bruk WASD / piltastene, for å gå';}
+const gl=new GLTFLoader(),tl=new THREE.TextureLoader();
+const tex=(u,srgb,rep=1)=>{const t=tl.load(u);if(srgb)t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep);t.anisotropy=8;return t};
+// models are stored as JSON with the binary embedded; rebuild a GLB in memory so nothing is fetched from a data: URL
+// 23 Nov (performance only): the base64 text is turned into bytes with a plain loop instead of Uint8Array.from with a
+// callback per character; the bytes are exactly the same, made several times faster (measured 0.43-0.50 s in all).
+function b64bytes(b64){const s=atob(b64),n=s.length,out=new Uint8Array(n);for(let i=0;i<n;i++)out[i]=s.charCodeAt(i);return out}
+async function loadModel(name){const j=await (await fetch(`assets/${name}/${name}.json`)).json();const b64=j.buffers[0].uri.split(',')[1];const bin=b64bytes(b64);
+  delete j.buffers[0].uri;j.buffers[0].byteLength=bin.length;const enc=new TextEncoder().encode(JSON.stringify(j));const jl=(enc.length+3)&~3,bl=(bin.length+3)&~3;
+  const out=new Uint8Array(12+8+jl+8+bl);const dv=new DataView(out.buffer);dv.setUint32(0,0x46546C67,true);dv.setUint32(4,2,true);dv.setUint32(8,out.length,true);
+  dv.setUint32(12,jl,true);dv.setUint32(16,0x4E4F534A,true);out.fill(0x20,20,20+jl);out.set(enc,20);dv.setUint32(20+jl,bl,true);dv.setUint32(24+jl,0x004E4942,true);out.set(bin,28+jl);
+  return gl.parseAsync(out.buffer,`assets/${name}/`)}
+const safe=(p,fb=null)=>Promise.race([p,new Promise(r=>setTimeout(()=>r(fb),30000))]).catch(e=>{console.warn('asset failed',e);return fb});
+const [HDR,FERN,ROCKS,ROOTS,LOG]=await Promise.all([safe(fetch('assets/misty_pines_1k.json').then(r=>r.json()).then(j=>{const b=b64bytes(j.b64);const L=new RGBELoader();const d=L.parse(b.buffer);const t=new THREE.DataTexture(d.data,d.width,d.height,THREE.RGBAFormat,d.type);t.colorSpace=THREE.LinearSRGBColorSpace;t.minFilter=t.magFilter=THREE.LinearFilter;t.flipY=true;t.needsUpdate=true;return t})),safe(loadModel('fern_02')),safe(loadModel('rock_moss_set_01')),safe(loadModel('pine_roots')),safe(loadModel('dead_tree_trunk_02'))]);
+const EARTH={c:tex('assets/realm/earth_color.jpg',true),n:tex('assets/realm/earth_normal.jpg')},BARK={c:tex('assets/realm/bark_color.jpg',true,1),n:tex('assets/realm/bark_normal.jpg',false,1)},STONE={c:tex('assets/realm/stone_color.jpg',true),n:tex('assets/realm/stone_normal.jpg')};
+const meshesOf=g=>{const a=[];if(!g)return a;g.scene.updateMatrixWorld(true);g.scene.traverse(o=>{if(o.isMesh){const geo=o.geometry.clone();geo.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(o.rotation).scale(o.scale));geo.computeBoundingBox();const b=geo.boundingBox,c=new THREE.Vector3();b.getCenter(c);geo.translate(-c.x,-b.min.y,-c.z);geo.computeBoundingBox();a.push({geo,mat:o.material})}});return a};
+enterBtn.disabled=false;enterBtn.textContent=enterLabel;
+
+const TAU=Math.PI*2, rnd=(a,b)=>a+Math.random()*(b-a);
+const ease=t=>t<=0?0:t>=1?1:t*t*(3-2*t), seg=(t,a,b)=>ease((t-a)/(b-a));
+
+/* ================= renderer + cinematic post ================= */
+const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});
+const PR=Math.min(devicePixelRatio,1.75);renderer.setPixelRatio(PR);renderer.setSize(innerWidth,innerHeight);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.92;
+document.body.appendChild(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x06080a);
+const camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.05,900);
+if(HDR){const pm=new THREE.PMREMGenerator(renderer);HDR.mapping=THREE.EquirectangularReflectionMapping;scene.environment=pm.fromEquirectangular(HDR).texture;scene.environmentIntensity=.42;HDR.dispose()}
+scene.fog=new THREE.FogExp2(0x06080a,.034);
+const hemi=new THREE.HemisphereLight(0x9aa8b0,0x0b0d0e,.55);scene.add(hemi);
+const moon=new THREE.DirectionalLight(0xc8d4dc,1.1);moon.position.set(-30,80,20);scene.add(moon);
+const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.6,.65,1.);composer.addPass(bloom);
+const grade=new ShaderPass({uniforms:{tDiffuse:{value:null},time:{value:0},uw:{value:0},flash:{value:0},glitch:{value:0}},
+  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader:`uniform sampler2D tDiffuse;uniform float time,uw,flash,glitch;varying vec2 vUv;
+  float h(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
+  void main(){vec2 uv=vUv;float g=glitch;float ft=floor(time*14.);
+    float band=floor(uv.y*38.);if(h(vec2(band,ft))<g*.3)uv.x+=(h(vec2(band,ft+7.))-.5)*.14*g;          // torn scanlines
+    vec2 gs=vec2(26.,15.),bl=floor(uv*gs);if(h(bl+ft*.37)<g*.09)uv=(bl+.5)/gs+(uv-(bl+.5)/gs)*.35;          // compressed blocks
+    vec2 d=uv-.5;float r=dot(d,d);
+    float ca=.0006+.004*r+uw*.002+g*.018;vec3 c;c.r=texture2D(tDiffuse,uv+d*ca+vec2(g*.006,0.)).r;c.g=texture2D(tDiffuse,uv).g;c.b=texture2D(tDiffuse,uv-d*ca-vec2(g*.006,0.)).b;
+    // 23 Nov: the VHS scanlines are back, the same line as in Ingrid's draft ("HAGEN_ Easter egg draft.zip", 19 Nov); they had been
+    // taken out on 21 Nov. Ingrid, 21 Nov: "you can also bring back the VHS effect, right, in the ending". Only while the picture glitches.
+    c*=1.-g*.18*step(.5,fract(uv.y*260.));
+    c=mix(c,c*vec3(.86,1.,1.02),uw*.6);
+    c+=vec3(.012,.016,.018);                       // lifted, cold blacks
+    c*=1.-smoothstep(.12,.62,r)*.62;               // vignette
+    c+=(h(vUv*vec2(1920.,1080.)+fract(time*7.))-.5)*.035; // grain
+    c+=flash;gl_FragColor=vec4(c,1.);}`});
+composer.addPass(grade);composer.addPass(new OutputPass());
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight)});
+
+/* ================= shared ================= */
+const L=120, R=26, SE=.04;let GY=7;
+const U={time:{value:0},audio:{value:0},swell:{value:0},fogC:{value:new THREE.Color(0x06080a)},fogD:{value:.034},light:{value:new THREE.Vector2()},framePos:{value:new THREE.Vector2()},fade:{value:1}};
+const FOG=`uniform vec3 fogC;uniform float fogD;vec3 fog(vec3 c,float d){return mix(c,fogC,clamp(1.-exp(-fogD*fogD*d*d),0.,1.));}`;
+const NOISE=`float hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hh(i),hh(i+vec2(1,0)),f.x),mix(hh(i+vec2(0,1)),hh(i+1.),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*vn(p);p*=2.03;a*=.5;}return v;}
+float caus(vec2 p,float t){vec2 q=p;float c=0.;for(int i=0;i<3;i++){q+=vec2(sin(q.y*1.7+t),cos(q.x*1.5-t*1.2))*.55;c+=sin(q.x*2.1)*sin(q.y*1.9);}c=clamp(abs(c)/3.,0.,1.);return pow(1.-c,7.);}`;
+const VS_FOG=`varying float vD;varying vec3 vW;`;
+
+const world=new THREE.Group();scene.add(world);           // pivot = bottle neck at sea level
+const garden=new THREE.Group();garden.position.y=-L;world.add(garden);
+
+function softTex(){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.22,'rgba(255,255,255,.5)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return new THREE.CanvasTexture(c)}
+const SOFT=softTex();
+const glow=(col,s,o=1)=>{const m=new THREE.SpriteMaterial({map:SOFT,color:col,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:o});const sp=new THREE.Sprite(m);sp.scale.setScalar(s);return sp};
+
+/* ================= GARDEN ================= */
+const FRAME=new THREE.Vector3(15,0,-13.5);U.framePos.value.set(FRAME.x,FRAME.z);
+// ground
+const groundMat=new THREE.ShaderMaterial({uniforms:{...U,dis:{value:0},rim:{value:0},tC:{value:EARTH.c},tN:{value:EARTH.n},frost:{value:FROST}},
+  vertexShader:`${VS_FOG}varying vec2 vP;void main(){vP=position.xy;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`${FOG}${NOISE}uniform vec2 light,framePos;uniform float time,dis,audio,swell,rim,frost;uniform sampler2D tC,tN;varying vec2 vP;${VS_FOG}
+  void main(){vec2 p=vec2(vP.x,-vP.y);float r=length(p);
+    float g=fbm(p*.32);float gr=vn(p*9.)*.5+vn(p*23.)*.5;
+    vec3 tc=texture2D(tC,p*.09).rgb;float lum=dot(tc,vec3(.3,.59,.11));vec3 tn=normalize(texture2D(tN,p*.09).xzy*2.-1.);
+    float dif=.45+.55*max(dot(tn,normalize(vec3(-.35,1.,.25))),0.);
+    vec3 c=vec3(pow(lum,.8))*vec3(.86,.92,.95)*1.55*dif*(.75+.4*g)*(.9+.15*gr);
+    c*=.7+.3*smoothstep(.2,.8,fbm(p*.06+vec2(time*.012,time*.007)));      // drifting cloud shade
+    c+=vec3(.06,.07,.07)*pow(vn(p*3.+time*.4),6.)*.6;                       // wet glints
+    c=mix(c,vec3(.62,.68,.72)*(.6+.5*gr),frost*.38*smoothstep(.25,.75,g));   // V48: rime when it freezes where the visitor is
+    c+=vec3(.55,.6,.66)*pow(vn(p*16.+vec2(time*.03,0.)),16.)*frost*.9;      // and frost glints
+    c+=vec3(.5,.6,.6)*caus(p*.18+vec2(swell*1.5,0.),time*.35)*(.025+.09*swell);
+    float dl=length(p-light);c+=vec3(.95,.66,.32)*exp(-dl*dl*.05)*.3;
+    float df=length(p-framePos);c+=vec3(1.,.72,.36)*exp(-df*df*.12)*(.12+audio*.4);
+    c*=smoothstep(${(R*1.18).toFixed(1)},${(R*.72).toFixed(1)},r);
+    if(vn(p*.9)+vn(p*4.)*.25<dis*1.3)discard;if(rim>.5&&r+vn(p*.5)*7.>25.5)discard;
+    gl_FragColor=vec4(fog(c,vD),1.);}`});
+const ground=new THREE.Mesh(new THREE.CircleGeometry(R*1.2,128),groundMat);ground.rotation.x=-Math.PI/2;garden.add(ground);
+
+// real ferns (fern_02), graded dark like Hagen's silhouettes
+const pbrFade=[];
+const sway=(m)=>{m.onBeforeCompile=sh=>{sh.uniforms.time=U.time;sh.uniforms.swell=U.swell;sh.uniforms.audio=U.audio;
+  sh.vertexShader='uniform float time,swell,audio;\n'+sh.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+  #ifdef USE_INSTANCING
+  vec4 iw=instanceMatrix[3];float hg=max(position.y,0.);transformed.x+=sin(time*1.1+iw.x*.7+iw.z*.4)*hg*hg*.09*(1.+audio*3.)+swell*sin(time*.8)*hg*hg*.18;transformed.z+=cos(time*.9+iw.z*.6)*hg*hg*.07*(1.+audio*3.);
+  #endif`)}};
+const plantPts=[];
+meshesOf(FERN).forEach(({geo,mat},vi)=>{const m=mat.clone();m.color=new THREE.Color(.1,.115,.11);m.envMapIntensity=.5;m.transparent=true;m.alphaTest=.45;m.side=THREE.DoubleSide;sway(m);pbrFade.push(m);
+  const n=340,im=new THREE.InstancedMesh(geo,m,n),d=new THREE.Object3D();
+  for(let k=0;k<n;k++){let x,z;do{const a=rnd(0,TAU),r=Math.sqrt(Math.random())*R*1.04;x=Math.cos(a)*r;z=Math.sin(a)*r}while(Math.hypot(x-FRAME.x,z-FRAME.z)<1.7);
+    const sc=rnd(1.1,3.1);d.position.set(x,0,z);d.rotation.set(0,rnd(0,TAU),0);d.scale.setScalar(sc);d.updateMatrix();im.setMatrixAt(k,d.matrix);plantPts.push([x,z,sc])}
+  garden.add(im)});
+if(!plantPts.length)for(let i=0;i<300;i++){const an=rnd(0,TAU),r=Math.sqrt(Math.random())*R;plantPts.push([Math.cos(an)*r,Math.sin(an)*r,1])}
+// mossy rocks and pine roots and a fallen log, all from Hagen
+const ROCKSET=meshesOf(ROCKS),ROOTSET=meshesOf(ROOTS),LOGSET=meshesOf(LOG);
+const place=(set,arr,tint,scale,fade=true,parent=garden)=>!set.length?[]:arr.map(([x,z,ry,sc],i)=>{const {geo,mat}=set[i%set.length];const m=mat.clone();m.color=new THREE.Color(...tint);if(fade){m.transparent=true;pbrFade.push(m)}
+  const o=new THREE.Mesh(geo,m);const sz=new THREE.Vector3();geo.boundingBox.getSize(sz);o.scale.setScalar(scale*sc/Math.max(sz.x,sz.z));o.position.set(x,0,z);o.rotation.y=ry;parent.add(o);return o});
+const gardenRocks=place(ROCKSET,Array.from({length:22},()=>{const a=rnd(0,TAU),r=rnd(4,R*.98);return [Math.cos(a)*r,Math.sin(a)*r,rnd(0,TAU),rnd(.6,1.8)]}),[.42,.47,.5],1.6);
+place(ROOTSET,[[FRAME.x-2.8,FRAME.z+1.5,1.2,1],[FRAME.x+2.2,FRAME.z-2.6,-.6,.8],[-6,9,2.4,1.1]],[.35,.36,.36],4.5);
+place(LOGSET,[[FRAME.x+.4,FRAME.z-1.9,.45,.55],[-12,-4,.7,1],[8,11,2.2,.8],[-4,-18,-.4,.9]],[.32,.33,.34],7);
+// white flowers
+{const n=700,a=new Float32Array(n*3);for(let i=0;i<n;i++){const c=plantPts[(Math.random()*plantPts.length)|0];a.set([c[0]+rnd(-.5,.5),rnd(.35,1.1)*c[2],c[1]+rnd(-.5,.5)],i*3)}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(a,3));
+ var flowers=new THREE.Points(g,new THREE.PointsMaterial({map:SOFT,color:new THREE.Color(1.05,1.05,1.),size:.12,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));garden.add(flowers)}
+// trunks
+const trunkMat=new THREE.ShaderMaterial({uniforms:U,transparent:true,vertexShader:`${VS_FOG}varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`${FOG}uniform float fade;varying vec3 vN;${VS_FOG}void main(){float rim=pow(1.-abs(vN.z),3.);vec3 c=vec3(.008,.009,.01)+vec3(.05,.055,.06)*rim;gl_FragColor=vec4(fog(c,vD),fade);}`});
+const trunks=[[-9,4],[6,-6],[19,9],[-18,-12],[2,16],[-22,8]];
+BARK.c.repeat.set(2,14);BARK.n.repeat.set(2,14);const barkMat=new THREE.MeshStandardMaterial({map:BARK.c,normalMap:BARK.n,color:new THREE.Color(.22,.22,.23),roughness:.95,transparent:true});pbrFade.push(barkMat);
+const trunkMeshes=trunks.map(([x,z])=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(.8,1.5,48,20),barkMat);t.position.set(x,24,z);t.rotation.z=rnd(-.06,.06);garden.add(t);return t});
+// the horizon: dark ridges that may be mountains, or the curve of the glass
+const ridgeMat=new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,side:THREE.BackSide,
+  vertexShader:`varying vec2 vUv;${VS_FOG}void main(){vUv=uv;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`${FOG}${NOISE}uniform float time,swell,fade;varying vec2 vUv;${VS_FOG}void main(){float x=vUv.x*40.;
+    float wob=sin(vUv.y*9.+time*.6)*.004*(1.+swell*5.);float ridge=.25+.42*fbm(vec2(x*.35+wob*60.,1.7))+.12*fbm(vec2(x*1.4,4.));
+    float y=vUv.y;float body=smoothstep(ridge+.004,ridge-.004,y);
+    vec3 c=vec3(.004,.005,.006);float rim=exp(-abs(y-ridge)*160.)*.06;
+    float streak=pow(max(0.,1.-abs(fract(vUv.x*3.+time*.004)-.5)*40.),2.)*smoothstep(.1,.9,y)*.05*(1.+swell*3.); // a glint of glass
+    float lure=exp(-pow((vUv.x-.62)*400.,2.)-pow((y-ridge-.01)*90.,2.))*(.6+.4*sin(time*.8));                   // a far light
+    vec3 col=c*body+vec3(.3,.34,.35)*rim+vec3(.6,.7,.72)*streak+vec3(1.6,1.1,.5)*lure;
+    float a=max(body,0.)*.95+rim+streak+lure;gl_FragColor=vec4(fog(col,vD*.55),min(a,1.)*fade);}`});
+const ridge=new THREE.Mesh(new THREE.CylinderGeometry(R*1.14,R*1.14,30,160,1,true),ridgeMat);ridge.position.y=13;garden.add(ridge);
+// low fog banks
+const fogBanks=[];for(let i=0;i<22;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:SOFT,color:0x9aa6aa,transparent:true,opacity:.09,depthWrite:false}));s.position.set(rnd(-22,22),rnd(1,4),rnd(-22,22));s.scale.set(rnd(12,22),rnd(5,9),1);garden.add(s);fogBanks.push([s,rnd(0,TAU)])}
+
+// mycelium: several threads lead to the frame
+const myc=[],mph=[];
+function grow(x,z,a,steps,ph,depth){for(let i=0;i<steps;i++){const nx=x+Math.cos(a)*.38,nz=z+Math.sin(a)*.38;if(Math.hypot(nx,nz)>R)break;
+  myc.push(x,.03,z,nx,.03,nz);mph.push(ph+i,ph+i+1);x=nx;z=nz;a+=rnd(-.5,.5);if(depth<4&&Math.random()<.06)grow(x,z,a+rnd(-1.3,1.3),steps*.55|0,ph+i,depth+1)}}
+for(let i=0;i<7;i++){const a=rnd(0,TAU);grow(FRAME.x+Math.cos(a)*.8,FRAME.z+Math.sin(a)*.8,Math.atan2(-FRAME.z,-FRAME.x)+rnd(-1.2,1.2),90,0,0)}
+for(let i=0;i<34;i++){const a=rnd(0,TAU),r=rnd(1,R*.92);grow(Math.cos(a)*r,Math.sin(a)*r,rnd(0,TAU),rnd(30,75)|0,rnd(0,50),1)}
+const mycGeo=new THREE.BufferGeometry();mycGeo.setAttribute('position',new THREE.Float32BufferAttribute(myc,3));mycGeo.setAttribute('ph',new THREE.Float32BufferAttribute(mph,1));
+const mycMat=new THREE.ShaderMaterial({uniforms:{...U,boost:{value:0}},transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,
+  vertexShader:`attribute float ph;varying float vPh;${VS_FOG}void main(){vPh=ph;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`uniform float time,fade,boost,audio;varying float vPh;${VS_FOG}void main(){float p=pow(.5+.5*sin(vPh*.32-time*(1.4+audio*2.+boost*3.)),10.);
+    float a=(.1+1.3*p*(.5+audio)+boost*.7)*fade*exp(-vD*vD*.00025);gl_FragColor=vec4(vec3(1.,.74,.42)*a,1.);}`});
+mycMat.uniforms.fade={value:1};garden.add(new THREE.LineSegments(mycGeo,mycMat));
+
+// jellyfish lights
+const jellyMat=new THREE.ShaderMaterial({uniforms:{...U},transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,
+  vertexShader:`varying vec3 vN,vV;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`uniform float audio,fade;varying vec3 vN,vV;void main(){float f=pow(1.-abs(dot(vN,vV)),2.);gl_FragColor=vec4(vec3(1.,.82,.55)*(f*.9+.04)*(1.+audio*.7)*fade,1.);}`});
+const bellGeo=new THREE.SphereGeometry(.5,24,12,0,TAU,0,Math.PI*.55);
+const jellies=[];
+for(let i=0;i<11;i++){const g=new THREE.Group();const bell=new THREE.Mesh(bellGeo,jellyMat);g.add(bell);g.add(glow(new THREE.Color(1.,.8,.5),1.2,.45));
+  const tg=new THREE.BufferGeometry();tg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(8*5*6),3));
+  const tl=new THREE.LineSegments(tg,new THREE.LineBasicMaterial({color:new THREE.Color(1.2,.85,.45),transparent:true,opacity:.45,blending:THREE.AdditiveBlending,depthWrite:false}));
+  garden.add(g,tl);const base=new THREE.Vector3(rnd(-21,21),rnd(3,7),rnd(-21,21));g.scale.setScalar(rnd(.7,1.4));jellies.push({g,bell,tl,base,ph:rnd(0,TAU)})}
+
+/* ---- V48: HAGEN's own forms, so this small garden reads as the same garden before the glass is seen:
+   pearl membranes like the garden's root thresholds, golden wire mushrooms, glowing roots that lead to
+   the photograph. Few objects (9 draws); all fade with the garden when it dissolves. ---- */
+const pearlMat=new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,
+  vertexShader:`varying vec3 vN,vV,vL;${VS_FOG}void main(){vL=position;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`${FOG}uniform float time,audio,fade;varying vec3 vN,vV,vL;${VS_FOG}void main(){float f=pow(1.-abs(dot(normalize(vN),vV)),2.2);
+    float a=atan(vL.z,vL.x);float rib=smoothstep(.9,1.,abs(sin(a*16.)))*(.55+.45*sin(vL.y*4.-time*.8));
+    vec3 c=vec3(.78,.84,.92)*(f*.9+.05)+vec3(.92,.95,1.)*rib*.5*(1.+audio);gl_FragColor=vec4(fog(c,vD),(f*.55+rib*.35+.04)*fade);}`});
+const pearlBack=new THREE.MeshBasicMaterial({color:0x1a2a2d,side:THREE.BackSide,transparent:true,opacity:.85});pbrFade.push(pearlBack);
+const pearlGeo=new THREE.SphereGeometry(.72,28,18);
+for(const [x,z,s] of [[FRAME.x-3.6,FRAME.z+2.6,1.15],[FRAME.x+3.9,FRAME.z-3.2,.95],[-9,-6,1.3]]){
+  const g=new THREE.Group();g.position.set(x,.88*s,z);g.scale.set(s,s*1.12,s*.82);g.add(new THREE.Mesh(pearlGeo,pearlBack),new THREE.Mesh(pearlGeo,pearlMat));garden.add(g)}
+const wireMat=new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  vertexShader:`varying float vY;${VS_FOG}void main(){vY=position.y;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`uniform float time,audio,fade;varying float vY;${VS_FOG}void main(){float p=.55+.45*sin(vY*3.-time*1.2);gl_FragColor=vec4(vec3(1.,.74,.42)*(.32+.28*p)*(1.+audio*.8)*fade*exp(-vD*vD*.0004),1.);}`});
+function wireMushroom(cr,h){const v=[];const capY=t=>h-Math.pow(t,1.6)*h*.32,capR=t=>cr*Math.sin(t*Math.PI*.55);
+  for(let m=0;m<26;m++){const a=m/26*TAU;for(let i=0;i<10;i++){const t0=i/10,t1=(i+1)/10;v.push(Math.cos(a)*capR(t0),capY(t0),Math.sin(a)*capR(t0),Math.cos(a)*capR(t1),capY(t1),Math.sin(a)*capR(t1))}}
+  for(const t of [.35,.7,1]){for(let m=0;m<48;m++){const a0=m/48*TAU,a1=(m+1)/48*TAU;v.push(Math.cos(a0)*capR(t),capY(t),Math.sin(a0)*capR(t),Math.cos(a1)*capR(t),capY(t),Math.sin(a1)*capR(t))}}
+  for(let m=0;m<16;m++){const a=m/16*TAU;for(let i=0;i<8;i++){const y0=i/8*h*.82,y1=(i+1)/8*h*.82,r0=cr*.16*(1.25-y0/h*.5),r1=cr*.16*(1.25-y1/h*.5);v.push(Math.cos(a+y0*.4)*r0,y0,Math.sin(a+y0*.4)*r0,Math.cos(a+y1*.4)*r1,y1,Math.sin(a+y1*.4)*r1)}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));return new THREE.LineSegments(g,wireMat)}
+for(const [x,z,cr,h] of [[-5,-9,2.4,3.6],[9,7,1.7,2.6]]){const m=wireMushroom(cr,h);m.position.set(x,0,z);garden.add(m)}
+const rootGlowMat=new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  vertexShader:`varying vec2 vUv;${VS_FOG}void main(){vUv=uv;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`uniform float time,audio,fade;varying vec2 vUv;${VS_FOG}void main(){float p=pow(.5+.5*sin(vUv.x*42.-time*(1.8+audio*2.)),9.);gl_FragColor=vec4(vec3(1.,.74,.42)*(.18+1.1*p*(.6+audio))*fade*exp(-vD*vD*.0003),1.);}`});
+for(const [sx,sz] of [[-9,-6],[-5,-9],[9,7]]){const pts=[];for(let i=0;i<=8;i++){const u=i/8;pts.push(new THREE.Vector3(THREE.MathUtils.lerp(sx,FRAME.x,u)+Math.sin(u*7+sx)*1.2,.04+Math.sin(u*Math.PI)*.05,THREE.MathUtils.lerp(sz,FRAME.z,u)+Math.cos(u*6+sz)*1.1))}
+  const geo=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),120,.05,6,false);const p=geo.attributes.position,c=new THREE.Vector3();
+  for(let i=0;i<=120;i++){const u=i/120,k=.35+.65*Math.sin(Math.min(1,u*1.15)*Math.PI*.5)*(1-u*.55);new THREE.CatmullRomCurve3(pts).getPointAt(u,c);for(let j=0;j<=6;j++){const n=i*7+j;p.setXYZ(n,c.x+(p.getX(n)-c.x)*k,c.y+(p.getY(n)-c.y)*k,c.z+(p.getZ(n)-c.z)*k)}}
+  garden.add(new THREE.Mesh(geo,rootGlowMat))}
+const edgeGlint=glow(new THREE.Color(.9,1,1.05),2.5,0);garden.add(edgeGlint);
+// the walker
+const walker=glow(new THREE.Color(1.2,1.2,1.25),1.4);garden.add(walker);const walkerCore=glow(new THREE.Color(2.2,2.2,2.2),.3);garden.add(walkerCore);
+
+// the frame with the photograph
+const frame=new THREE.Group();frame.position.copy(FRAME);frame.rotation.y=.45;garden.add(frame);
+const photoMat=new THREE.MeshBasicMaterial({color:0xcfc6b8});
+function placeholderPhoto(){const c=document.createElement('canvas');c.width=640;c.height=480;const g=c.getContext('2d');
+  g.fillStyle='#d9ceb6';g.fillRect(0,0,640,480);
+  const gr=g.createLinearGradient(0,40,0,300);gr.addColorStop(0,'#b9ad93');gr.addColorStop(.6,'#9b8f78');gr.addColorStop(.61,'#5d5546');gr.addColorStop(1,'#463f33');g.fillStyle=gr;g.fillRect(40,40,560,260);
+  g.fillStyle='#2b2720';g.beginPath();g.moveTo(150,200);g.lineTo(470,200);g.lineTo(450,224);g.lineTo(175,224);g.fill();g.fillRect(380,150,60,52);g.fillRect(400,118,14,34);g.fillRect(230,180,140,22);
+  g.strokeStyle='#2b2720';g.lineWidth=2;g.beginPath();g.moveTo(300,180);g.lineTo(300,110);g.stroke();
+  g.strokeStyle='rgba(40,30,22,.85)';g.lineWidth=2.2;g.lineCap='round';           // handwritten song text (stand-in, illegible)
+  for(let l=0;l<4;l++){let x=60,y=340+l*30;g.beginPath();g.moveTo(x,y);while(x<580-rnd(0,120)){const w=rnd(14,40);for(let k=0;k<w;k+=3){g.lineTo(x+k,y+Math.sin(k*.9+l)*rnd(2,6)-rnd(0,4))}x+=w+rnd(6,12);g.moveTo(x,y)}g.stroke()}
+  const v=g.createRadialGradient(320,240,120,320,240,420);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(40,26,12,.55)');g.fillStyle=v;g.fillRect(0,0,640,480);
+  for(let i=0;i<4000;i++){g.fillStyle=`rgba(255,245,220,${Math.random()*.07})`;g.fillRect(rnd(0,640),rnd(0,480),1.5,1.5)}
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
+photoMat.map=placeholderPhoto();
+{const W=2.1,H=1.6,b=.16,wood=new THREE.MeshBasicMaterial({color:0x2a1d12});
+ [[0,H/2,W+b,b],[0,-H/2,W+b,b],[W/2,0,b,H],[-W/2,0,b,H]].forEach(([x,z,w,d])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,.09,d),wood);m.position.set(x,.05,z);frame.add(m)});
+ const ph=new THREE.Mesh(new THREE.PlaneGeometry(W-.02,H-.02),photoMat);ph.rotation.x=-Math.PI/2;ph.position.y=.04;frame.add(ph)}
+const frameGlow=glow(new THREE.Color(1.,.72,.38),3.4,.5);frameGlow.position.set(FRAME.x,.5,FRAME.z);garden.add(frameGlow);
+// photo.jpg next to this file replaces the stand-in (the real photograph with the song text).
+// V48RC (D-14): the photograph is not in the folder yet, so asking for it only gave a failed request on
+// every visit. Put photo.jpg here and set PHOTO to true; nothing else changes.
+const PHOTO=false;
+(PHOTO?fetch('photo.jpg'):Promise.reject()).then(r=>{if(!r.ok)throw 0;return r.blob()}).then(b=>createImageBitmap(b)).then(img=>{const t=new THREE.Texture(img);t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;photoMat.map=t;photoMat.needsUpdate=true}).catch(()=>{});
+
+// rain
+const RN=1800,rainArr=new Float32Array(RN*6),rainSeed=Array.from({length:RN},()=>[rnd(-1,1),Math.random(),rnd(-1,1),rnd(.8,1.3)]);
+const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainArr,3));
+const rain=new THREE.LineSegments(rainGeo,new THREE.LineBasicMaterial({color:new THREE.Color(.75,.8,.82),transparent:true,opacity:.28,depthWrite:false}));rain.frustumCulled=false;scene.add(rain);
+// V48: as much rain as there really is where the visitor is (none when it is dry), and snow at freezing.
+rainGeo.setDrawRange(0,Math.round(RN*2*RAIN));rain.material.opacity=SNOW?.5:.28;if(SNOW)rain.material.color.setRGB(.9,.93,.96);
+function updateRain(c,dt,spread,top,fall=1.6){if(RAIN<.01)return;const fl=SNOW?fall*.22:fall,len=SNOW?.07:.8,n=Math.round(RN*RAIN);for(let i=0;i<n;i++){const s=rainSeed[i];s[1]-=dt*fl*s[3];if(s[1]<0)s[1]+=1;const x=c.x+s[0]*spread+(SNOW?Math.sin(s[1]*9+i)*.4:0),z=c.z+s[2]*spread,y=c.y+s[1]*top;rainArr.set([x,y,z,x+(SNOW?.02:.05),y+len,z+.02],i*6)}rainGeo.attributes.position.needsUpdate=true}
+
+/* ================= the garden becomes light (point cloud) ================= */
+const CP=[],CC=[],CR=[];
+const push=(x,y,z,r,g,b)=>{CP.push(x,y,z);CC.push(r,g,b);CR.push(Math.random(),Math.random(),Math.random(),Math.random())};
+for(let i=0;i<11000;i++){const a=rnd(0,TAU),r=Math.sqrt(Math.random())*R;push(Math.cos(a)*r,.03,Math.sin(a)*r,.3,.33,.35)}
+for(let i=0;i<16000;i++){const k=(Math.random()*myc.length/6|0)*6,t=Math.random();push(myc[k]+(myc[k+3]-myc[k])*t,.05,myc[k+2]+(myc[k+5]-myc[k+2])*t,1.5,.98,.48)}
+for(let i=0;i<9000;i++){const p=plantPts[(Math.random()*plantPts.length)|0],a=rnd(0,TAU),r=Math.random()*p[2];push(p[0]+Math.cos(a)*r,Math.random()*.6*p[2],p[1]+Math.sin(a)*r,.55,.6,.64)}
+for(let i=0;i<4000;i++){const t=trunks[(Math.random()*trunks.length)|0],a=rnd(0,TAU);push(t[0]+Math.cos(a)*1.1,rnd(0,30),t[1]+Math.sin(a)*1.1,.45,.5,.55)}
+const cloudGeo=new THREE.BufferGeometry();cloudGeo.setAttribute('position',new THREE.Float32BufferAttribute(CP,3));cloudGeo.setAttribute('aC',new THREE.Float32BufferAttribute(CC,3));cloudGeo.setAttribute('aR',new THREE.Float32BufferAttribute(CR,4));
+const cloudMat=new THREE.ShaderMaterial({uniforms:{...U,uT:{value:0},pix:{value:PR}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  vertexShader:`attribute vec3 aC;attribute vec4 aR;uniform float uT,time,audio,pix;varying vec3 vC;varying float vA;
+  void main(){vec3 p=position;float k=clamp((uT-4.-aR.x*3.5)/(4.5+aR.y*2.5),0.,1.);float e=k*k*(3.-2.*k);
+    float r0=length(p.xz),a0=atan(p.z,p.x);float ang=a0+e*e*(6.+aR.z*4.);
+    float rr=mix(r0,1.5+aR.w*3.,smoothstep(0.,.65,e));rr=mix(rr,aR.w*1.6,smoothstep(.72,.98,e));
+    float lift=(1.-e)*smoothstep(3.,5.5,uT)*aR.z*(.4+audio*1.2);
+    vec3 q=vec3(cos(ang)*rr,p.y+lift+pow(e,1.55)*${(L+9).toFixed(1)},sin(ang)*rr);
+    float tb=e*(1.-e)*4.;q.x+=sin(q.y*.35+time*1.4+aR.x*6.)*tb;q.z+=cos(q.y*.31+time*1.2+aR.y*6.)*tb;
+    vec4 mv=modelViewMatrix*vec4(q,1.);gl_PointSize=clamp((1.+aR.w*1.6)*(1.+audio*.7)*pix*55./-mv.z,1.,9.);gl_Position=projectionMatrix*mv;
+    vC=aC*(1.+e*.6);vA=smoothstep(3.,5.5,uT)*(1.-smoothstep(.95,1.,e))*(.55+.45*sin(time*3.+aR.x*40.));}`,
+  fragmentShader:`varying vec3 vC;varying float vA;void main(){vec2 d=gl_PointCoord-.5;float a=smoothstep(.5,.0,length(d));if(vA*a<.004)discard;gl_FragColor=vec4(vC*a*vA,1.);}`});
+const cloud=new THREE.Points(cloudGeo,cloudMat);cloud.frustumCulled=false;cloud.visible=false;garden.add(cloud);
+
+/* ================= the bottle ================= */
+const prof=[new THREE.Vector2(0,-L-2.4),new THREE.Vector2(R*1.1,-L-2.4)];for(let i=0;i<=64;i++){const t=i/64,y=-L-2+t*(L+2.6);let r;
+  if(y<-34)r=R*1.18;else if(y<-14){const k=(y+34)/20;r=THREE.MathUtils.lerp(R*1.18,4.2,k*k*(3-2*k))}else if(y<-1)r=4.2;else r=5;prof.push(new THREE.Vector2(r,y))}
+const glassMat=new THREE.ShaderMaterial({uniforms:{...U,op:{value:0}},transparent:true,depthWrite:false,side:THREE.DoubleSide,
+  vertexShader:`varying vec3 vN,vV;${VS_FOG}void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`${FOG}uniform float op,audio;varying vec3 vN,vV;${VS_FOG}void main(){vec3 n=normalize(vN);float f=pow(1.-abs(dot(n,vV)),2.2);
+    float st=smoothstep(.9,1.,sin(n.x*7.+1.3))*.7+smoothstep(.96,1.,sin(n.x*19.-.5))*.45;st*=smoothstep(.25,1.,op)*(gl_FrontFacing?1.:0.);
+    vec3 c=vec3(.26,.42,.34)*(f*1.1+.05)+vec3(.85,.92,.95)*st*(.3+.7*f)*.55+vec3(1.,.72,.38)*f*.12*(1.+audio);
+    gl_FragColor=vec4(fog(c,vD*.5),(f*(gl_FrontFacing?.6:.25)+.06+st*.35)*op);}`});
+const bottle=new THREE.Mesh(new THREE.LatheGeometry(prof,96),glassMat);bottle.renderOrder=5;bottle.visible=false;world.add(bottle);
+const bottleGlow=glow(new THREE.Color(1.1,.75,.36),1.8,0);scene.add(bottleGlow);
+
+/* ================= the Norwegian Sea ================= */
+const seaMat=new THREE.ShaderMaterial({uniforms:{...U,op:{value:0},bpos:{value:new THREE.Vector3()},bglow:{value:0}},transparent:true,depthWrite:false,side:THREE.DoubleSide,
+  vertexShader:`uniform float time;${VS_FOG}varying float vH;varying vec3 vNw;
+  float w(vec2 p,vec2 d,float f,float s,float a){return a*sin(dot(p,normalize(d))*f+time*s);}
+  vec2 wg(vec2 p,vec2 d,float f,float s,float a){vec2 n=normalize(d);return n*(a*f*cos(dot(p,n)*f+time*s));}
+  void main(){vec3 p=position;vec2 q=p.xy;float h=w(q,vec2(1,.3),.13,.9,.7)+w(q,vec2(-.4,1),.23,1.3,.35)+w(q,vec2(.7,-.7),.5,2.,.12)+w(q,vec2(-1,-.2),1.1,2.9,.05)+w(q,vec2(.2,1),2.3,4.,.02);
+    vec2 gr=wg(q,vec2(1,.3),.13,.9,.7)+wg(q,vec2(-.4,1),.23,1.3,.35)+wg(q,vec2(.7,-.7),.5,2.,.12)+wg(q,vec2(-1,-.2),1.1,2.9,.05)+wg(q,vec2(.2,1),2.3,4.,.02);
+    vNw=vec3(-gr.x,1.,gr.y);   // 23 Nov: the waves' own slope (the plane lies rotated -90 degrees about x): smooth water, no triangle facets
+    p.z=h;vH=h;vec4 wp=modelMatrix*vec4(p,1.);vW=wp.xyz;vec4 mv=viewMatrix*wp;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`${FOG}${NOISE}uniform float op,time,audio,bglow;uniform vec3 bpos;varying float vH;varying vec3 vNw;${VS_FOG}
+  float w(vec2 p,vec2 d,float f,float s,float a){return a*sin(dot(p,normalize(d))*f+time*s);}
+  void main(){
+    // 23 Nov: only the side of the water that faces the camera (the underside showed through far crests as rows of dark triangles)
+    vec2 qc=vec2(cameraPosition.x,-cameraPosition.z);float hc=w(qc,vec2(1,.3),.13,.9,.7)+w(qc,vec2(-.4,1),.23,1.3,.35)+w(qc,vec2(.7,-.7),.5,2.,.12)+w(qc,vec2(-1,-.2),1.1,2.9,.05)+w(qc,vec2(.2,1),2.3,4.,.02);
+    if(gl_FrontFacing!=(cameraPosition.y>hc))discard;
+    vec3 n=normalize(vNw);vec3 v=normalize(cameraPosition-vW);float db=length(vW.xz-bpos.xz);
+    vec3 c;float a;
+    if(gl_FrontFacing){
+      // 23 Nov: fine wind ripples near the camera break the reflection up, like real water
+      vec2 rp=vW.xz*.55+vec2(time*.21,time*.13);float r0=fbm(rp),rx=fbm(rp+vec2(.15,0.)),rz=fbm(rp+vec2(0.,.15));
+      n=normalize(n+vec3(r0-rx,0.,r0-rz)*1.2*(1.-smoothstep(12.,140.,vD)));
+      float fr=pow(1.-max(dot(n,v),0.),5.);
+      // 23 Nov: a darker sea, and only thin broken foam on the highest crests (it was pale patches over half of each wave)
+      c=vec3(.004,.009,.012)+vec3(.16,.19,.21)*(.05+.85*fr);
+      c+=vec3(.08,.09,.1)*smoothstep(.75,1.1,vH)*smoothstep(.55,.8,fbm(vW.xz*1.7+time*.3))*.7;  // crests and foam
+      c+=vec3(.05)*pow(vn(vW.xz*7.+time*6.),12.);                                      // rain dimples
+      c+=vec3(1.,.65,.3)*exp(-db*db*.15)*bglow*(.25+.1*sin(time*1.3))*(1.+audio);
+      a=mix(.86,1.,fr)*op;}
+    else{float up=max(-v.y,0.);c=mix(vec3(.008,.025,.03),vec3(.1,.15,.15),pow(up,4.));c+=vec3(.05,.07,.07)*caus(vW.xz*1.3,time*.5)*pow(up,2.)*smoothstep(.45,.75,fbm(vW.xz*.15+time*.03))*.5;
+      c+=vec3(1.,.7,.32)*exp(-db*db*.15)*bglow*.3;a=.97*op;}
+    // 23 Nov: far water fades into the sky's own horizon colour (it faded to the dark fog and drew a false dark coastline)
+    vec3 fc=gl_FrontFacing?mix(fogC,vec3(.15,.18,.19),smoothstep(40.,300.,vD)):fogC;
+    gl_FragColor=vec4(mix(c,fc,clamp(1.-exp(-fogD*fogD*vD*vD),0.,1.)),a);}`});
+const sea=new THREE.Mesh(new THREE.PlaneGeometry(700,700,320,320),seaMat);sea.rotation.x=-Math.PI/2;sea.renderOrder=10;sea.visible=false;scene.add(sea);
+const skyMat=new THREE.ShaderMaterial({uniforms:{...U,op:{value:0}},side:THREE.BackSide,transparent:true,depthWrite:false,
+  vertexShader:`varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader:`${NOISE}uniform float op,time;varying vec3 vP;void main(){vec3 d=normalize(vP);float y=d.y;
+    vec3 c=mix(vec3(.16,.19,.2),vec3(.025,.032,.038),smoothstep(-.02,.35,y));c*=.8+.4*fbm(vec2(atan(d.z,d.x)*3.,y*6.)+time*.01);c=mix(c,vec3(.02,.025,.03),smoothstep(0.,-.1,y));gl_FragColor=vec4(c,op);}`});
+const sky=new THREE.Mesh(new THREE.SphereGeometry(420,48,24),skyMat);sky.visible=false;scene.add(sky);
+
+/* ----- the ghost tanker: a red 1990s chemical tanker drifting across the horizon ----- */
+const tanker=new THREE.Group();tanker.visible=false;scene.add(tanker);
+const shipMat=(col)=>new THREE.ShaderMaterial({uniforms:{...U,col:{value:new THREE.Color(col)},op:{value:0}},transparent:true,
+  vertexShader:`${VS_FOG}void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`${FOG}${NOISE}uniform vec3 col;uniform float op,time,audio;${VS_FOG}void main(){float s=.75+.25*fbm(vW.xy*.4+vec2(time*.05,0.));
+    float ghost=.7+.3*sin(time*.7+vW.x*.05);vec3 c=col*s*(1.+audio*1.6)+vec3(1.,.62,.28)*audio*.18*fbm(vW.xy*.8-time*.3);
+    gl_FragColor=vec4(fog(c,vD*(.85-audio*.25)),op*min(ghost+audio*.4,1.));}`});
+{const hull=new THREE.Shape();hull.moveTo(-20,0);hull.lineTo(18,0);hull.quadraticCurveTo(22.5,.6,23,4.2);hull.lineTo(-20.5,4.2);hull.lineTo(-20,0);
+ const hg=new THREE.ExtrudeGeometry(hull,{depth:5.6,bevelEnabled:false});hg.translate(0,-1.4,-2.8);
+ const red=shipMat(0x5a1410),white=shipMat(0x8f9294),dark=shipMat(0x0d0e10);
+ const h=new THREE.Mesh(hg,red);tanker.add(h);
+ const deck=new THREE.Mesh(new THREE.BoxGeometry(36,.35,5.4),dark);deck.position.set(1,2.95,0);tanker.add(deck);
+ for(let i=0;i<9;i++){const p=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,5,6),dark);p.rotation.x=Math.PI/2;p.position.set(-8+i*2.6,3.4,0);tanker.add(p)}
+ const pipe=new THREE.Mesh(new THREE.BoxGeometry(30,.25,.25),dark);pipe.position.set(2,3.5,0);tanker.add(pipe);
+ const house=new THREE.Mesh(new THREE.BoxGeometry(5.5,6,5.2),white);house.position.set(-16.3,6,0);tanker.add(house);
+ const bridge=new THREE.Mesh(new THREE.BoxGeometry(6.6,1.4,5.6),white);bridge.position.set(-16,9.4,0);tanker.add(bridge);
+ const funnel=new THREE.Mesh(new THREE.BoxGeometry(2,3.2,2),red);funnel.position.set(-18.4,11.2,0);tanker.add(funnel);
+ const mast=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,6,5),dark);mast.position.set(-15.5,13,0);tanker.add(mast);
+ const fmast=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,5,5),dark);fmast.position.set(19,6,0);tanker.add(fmast);
+ const lights=[[-15.5,16,0,1.6,1.6,1.5,2.2],[19,8.6,0,1.6,1.5,1.3,1.6],[-13,9.4,2.9,.4,1.8,.6,1.4],[-13,9.4,-2.9,1.9,.3,.25,1.4]];
+ for(let i=0;i<7;i++)lights.push([-18.5+i*1,9.4,2.85,1.7,1.25,.6,.7]);for(let i=0;i<5;i++)lights.push([-18+i*1.2,6.5,2.65,1.5,1.1,.55,.6]);
+ for(let i=0;i<6;i++)lights.push([-6+i*5,4.4,0,1.5,1.05,.5,1.1]);
+ tanker.userData.lights=lights.map(([x,y,z,r,g,b,s])=>{const sp=glow(new THREE.Color(r,g,b),s,0);sp.position.set(x,y,z);tanker.add(sp);return sp});
+ tanker.userData.mats=[red,white,dark]}
+tanker.scale.setScalar(1);
+// a searchlight from the bridge, slowly finding the bottle; and the ship's light lying on the water
+const beamMat=new THREE.ShaderMaterial({uniforms:{...U,op:{value:0}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
+  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader:`${NOISE}uniform float op,time,audio;varying vec2 vUv;void main(){float a=pow(vUv.y,2.2)*(.6+.4*vn(vec2(vUv.y*8.-time*.6,vUv.x*3.)))*op*(.35+audio*1.1);gl_FragColor=vec4(vec3(1.,.8,.5)*a,1.);}`});
+const beamG=new THREE.ConeGeometry(5,90,24,1,true);beamG.translate(0,-45,0);beamG.rotateX(-Math.PI/2);
+const beam=new THREE.Mesh(beamG,beamMat);beam.position.set(-15,9.4,3);tanker.add(beam);
+const shipReflect=new THREE.Sprite(new THREE.SpriteMaterial({map:SOFT,color:new THREE.Color(1.4,.95,.45),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:0}));shipReflect.scale.set(5,16,1);scene.add(shipReflect);
+
+/* ================= under the surface: kelp forest and the wreck ================= */
+const under=new THREE.Group();under.visible=false;scene.add(under);
+const FLOOR=-22;
+const seabedHeight=(x,z)=>FLOOR+Math.sin(x*.08)*1.2+Math.cos(z*.07+x*.03)*1.4+Math.sin(x*.4+z*.3)*.25;
+const rockFrag=`${FOG}${NOISE}uniform float time,audio;varying vec3 vN;${VS_FOG}void main(){float top=smoothstep(.1,.9,vN.y);
+  vec3 c=vec3(.02,.03,.03)*(.6+.8*fbm(vW.xz*.5+vW.y*.3))+vec3(.07,.11,.11)*caus(vW.xz*1.2,time*.45)*top*(.8+audio);gl_FragColor=vec4(fog(c,vD),1.);}`;
+const rockVert=`varying vec3 vN;${VS_FOG}void main(){vN=normalize(mat3(modelMatrix)*normal);vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`;
+const rockMat=new THREE.ShaderMaterial({uniforms:U,vertexShader:rockVert,fragmentShader:rockFrag});
+{const fg=new THREE.PlaneGeometry(320,320,140,140);fg.rotateX(-Math.PI/2);const p=fg.attributes.position;
+ for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);p.setY(i,Math.sin(x*.08)*1.2+Math.cos(z*.07+x*.03)*1.4+Math.sin(x*.4+z*.3)*.25)}fg.computeVertexNormals();
+ const fl=new THREE.Mesh(fg,rockMat);fl.position.y=FLOOR;under.add(fl);
+ place(ROCKSET,Array.from({length:40},()=>[rnd(-40,40),rnd(-60,25),rnd(0,TAU),rnd(.8,3)]),[.18,.24,.24],3.2,false,under).forEach(o=>o.position.y=FLOOR-.3);
+ for(let i=0;i<0;i++){const g=new THREE.IcosahedronGeometry(1,3),q=g.attributes.position,sx=rnd(.6,1.4),sz=rnd(.6,1.4),o=rnd(0,9);
+   for(let k=0;k<q.count;k++){const v=new THREE.Vector3().fromBufferAttribute(q,k);const n=1+.28*Math.sin(v.x*3+o)*Math.cos(v.y*3.3+o)+.12*Math.sin(v.z*7+o);v.multiplyScalar(n);q.setXYZ(k,v.x*sx,v.y*.7,v.z*sz)}
+   g.computeVertexNormals();const m=new THREE.Mesh(g,rockMat);const s=rnd(1.2,4.5);m.scale.setScalar(s);m.position.set(rnd(-40,40),FLOOR+s*.2,rnd(-60,25));m.rotation.y=rnd(0,TAU);under.add(m)}}
+// the wreck: a broken wooden skeleton of a ship
+const WRECK=new THREE.Vector3(5,FLOOR+.4,-14);
+{const w=new THREE.Group();const keel=new THREE.Mesh(new THREE.BoxGeometry(.5,.6,18),rockMat);w.add(keel);
+ for(let i=0;i<13;i++){const z=-8+i*1.35,r=2.6*Math.sin((i+1)/14*Math.PI)+.6,arc=i%4===2?Math.PI*.55:Math.PI;
+   const rib=new THREE.Mesh(new THREE.TorusGeometry(r,.13,6,22,arc),rockMat);rib.rotation.set(0,0,Math.PI+(Math.PI-arc)*.5*(i%2?1:-1));rib.position.set(0,r*.95,z);w.add(rib)}
+ const mast=new THREE.Mesh(new THREE.CylinderGeometry(.18,.24,11,8),rockMat);mast.position.set(1.8,4,2);mast.rotation.set(.3,0,-.9);w.add(mast);
+ w.position.copy(WRECK);w.rotation.set(.08,.6,.22);under.add(w)}
+// Modelled, cupped kelp fronds grow from one curved stipe. The silhouette is
+// geometry, rather than crossed rectangles cut out by a jagged fragment mask.
+const kelpGeo=(()=>{
+ const p=[],uv=[],index=[];let offset=0;
+ const stipe=new THREE.CylinderGeometry(.025,.04,.34,5,5);stipe.translate(0,.17,0);
+ p.push(...stipe.attributes.position.array);uv.push(...stipe.attributes.uv.array);index.push(...stipe.index.array);offset=stipe.attributes.position.count;stipe.dispose();
+ for(let leaf=0;leaf<5;leaf++){
+  const angle=leaf*2.39996,phase=leaf*1.7,segments=18;
+  for(let j=0;j<=segments;j++){
+   const u=j/segments,width=(.018+.30*Math.pow(Math.sin(Math.PI*u),.72))*(1+.09*Math.sin(u*21+phase));
+   const out=.045+u*(.55+leaf*.055),cx=Math.cos(angle)*out,cz=Math.sin(angle)*out;
+   const y=.32+u*(.62-leaf*.028)-u*u*.12;
+   for(let across=0;across<3;across++){
+    const edge=across-1,ruffle=Math.sin(u*17+phase)*width*.15*edge*edge;
+    p.push(cx-Math.sin(angle)*width*edge,y+ruffle,cz+Math.cos(angle)*width*edge+width*.22*edge*edge);
+    uv.push(across/2,u);
+   }
+  }
+  for(let j=0;j<segments;j++)for(let k=0;k<2;k++){const a=offset+j*3+k,b=a+3;index.push(a,b,a+1,a+1,b,b+1);}
+  offset+=(segments+1)*3;
+ }
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(index);g.computeVertexNormals();return g;
+})();
+const kelpMat=new THREE.ShaderMaterial({uniforms:U,side:THREE.DoubleSide,
+  vertexShader:`uniform float time,audio;varying vec2 vUv;${VS_FOG}void main(){vec3 p=position;vec4 iw=instanceMatrix[3];float ph=iw.x*.31+iw.z*.17;float h=p.y;
+    vec4 w=modelMatrix*instanceMatrix*vec4(p,1.);float b=h*h;w.x+=sin(time*.32+ph+h*2.2)*b*.6*(1.+audio*.35);w.z+=cos(time*.27+ph*1.3+h*1.7)*b*.45*(1.+audio*.35);
+    vUv=uv;vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`${FOG}${NOISE}uniform float time,audio;varying vec2 vUv;${VS_FOG}void main(){
+    vec3 n=normalize(cross(dFdx(vW),dFdy(vW))),v=normalize(cameraPosition-vW),sun=normalize(vec3(-.35,1.,.25));
+    float light=.28+.72*abs(dot(n,sun)),back=pow(max(dot(-v,sun),0.),2.);
+    float e=abs(vUv.x-.5)*2.,vein=exp(-abs(vUv.x-.5)*65.);
+    float grain=vn(vec2(vUv.x*75.,vUv.y*120.)),fold=.6+.4*sin(vUv.x*21.+sin(vUv.y*12.)*.7);
+    // 23 Nov: dark brown-olive kelp, golden-brown only where light comes through it (it was pale yellow-green paper close up)
+    vec3 tissue=mix(vec3(.026,.024,.01),vec3(.07,.052,.019),vUv.y*.65+grain*.16);
+    vec3 c=tissue*light*(.8+.2*fold)+vec3(.085,.062,.022)*back*(.35+.65*e)+vec3(.018,.015,.006)*vein;
+    c+=vec3(.025,.04,.03)*caus(vW.xz*.55,time*.25)*(1.+audio*.25);
+    gl_FragColor=vec4(fog(c,vD),1.);}`});
+const kelpN=520,kelp=new THREE.InstancedMesh(kelpGeo,kelpMat,kelpN);
+{const d=new THREE.Object3D();for(let i=0;i<kelpN;i++){let x,z;do{x=rnd(-45,45);z=rnd(-70,25)}while(Math.abs(x-(-z*.15))<3.5&&z>-30);
+  // 23 Nov: Norwegian kelp forest proportions (4-8 m, fronds half a metre to a metre wide); it was 9-20 m with 30 cm ribbons
+  const s=rnd(1.8,3);d.position.set(x,seabedHeight(x,z)-.08,z);d.rotation.y=rnd(0,TAU);d.scale.set(s*rnd(.85,1.15),rnd(4,8),s*rnd(.85,1.15));d.updateMatrix();kelp.setMatrixAt(i,d.matrix)}}
+kelp.frustumCulled=false;under.add(kelp);
+// god rays
+const rayMat=new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
+  vertexShader:`varying vec2 vUv;${VS_FOG}void main(){vUv=uv;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`${NOISE}uniform float time,audio;varying vec2 vUv;${VS_FOG}void main(){float x=abs(vUv.x-.5)*2.;float s=vn(vec2(vUv.x*6.+time*.15,vUv.y*.6));
+    float a=exp(-x*x*6.)*smoothstep(0.,.9,vUv.y)*smoothstep(1.,.85,vUv.y)*s*s*.035*(1.+audio*1.2)*exp(-vD*.02)*smoothstep(1.,5.,vD);gl_FragColor=vec4(vec3(.5,.7,.7)*a,1.);}`});
+const rays=[];for(let i=0;i<14;i++){const m=new THREE.Mesh(new THREE.PlaneGeometry(rnd(3,8),30),rayMat);m.position.set(rnd(-30,30),-13,rnd(-50,15));m.rotation.z=rnd(-.25,.1);under.add(m);rays.push(m)}
+// marine snow
+const SN=5000,snowA=new Float32Array(SN*3);for(let i=0;i<SN;i++)snowA.set([rnd(-30,30),rnd(-24,0),rnd(-30,30)],i*3);
+const snowGeo=new THREE.BufferGeometry();snowGeo.setAttribute('position',new THREE.BufferAttribute(snowA,3));
+const snow=new THREE.Points(snowGeo,new THREE.PointsMaterial({map:SOFT,size:.09,color:new THREE.Color(.45,.55,.53),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.7}));snow.frustumCulled=false;under.add(snow);
+// fish (sei / pollock school)
+// 23 Nov: real fish shapes instead of grey eight-sided lumps a metre long (Ingrid, 21 Nov: "what's the white things hanging
+// around"): a slim half-metre body, a forked tail and a dorsal fin, dark back and a faint silver belly, the tail beating.
+const FN=140,fishMat=new THREE.ShaderMaterial({uniforms:U,side:THREE.DoubleSide,
+  vertexShader:`uniform float time;varying vec3 vN;${VS_FOG}void main(){vec3 p=position;float ph=float(gl_InstanceID)*1.73;
+    float tail=1.-smoothstep(-.33,.12,p.z);p.x+=sin(time*7.+ph+p.z*5.)*(.05*tail*tail+.006);
+    vN=normalize(mat3(modelMatrix*instanceMatrix)*normal);vec4 w=modelMatrix*instanceMatrix*vec4(p,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`${FOG}varying vec3 vN;${VS_FOG}void main(){vec3 n=normalize(vN),v=normalize(cameraPosition-vW);if(dot(n,v)<0.)n=-n;
+    float back=smoothstep(-.1,.55,n.y),f=pow(1.-abs(dot(n,v)),2.);
+    vec3 c=mix(vec3(.085,.1,.1),vec3(.012,.019,.022),back)+vec3(.07,.09,.09)*f*(1.-back);gl_FragColor=vec4(fog(c,vD),1.);}`});
+const fishGeo=(()=>{const prof=[];for(let i=0;i<=12;i++){const t=i/12;prof.push(new THREE.Vector2(Math.max(.002,.06*Math.pow(Math.sin(Math.PI*Math.pow(t,1.45)),.85)),-.23+t*.47))}
+ const body=new THREE.LatheGeometry(prof,10);body.rotateX(Math.PI/2);body.scale(.62,1,1);   // head at +z (the school turns each fish to face where it swims)
+ const b=body.toNonIndexed();body.dispose();const P=[...b.attributes.position.array],N=[...b.attributes.normal.array];b.dispose();
+ for(const t of [[0,0,-.19,0,.09,-.33,0,0,-.26],[0,0,-.19,0,0,-.26,0,-.09,-.33],[0,.05,.06,0,.095,-.01,0,.045,-.07]]){P.push(...t);N.push(1,0,0,1,0,0,1,0,0)}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));return g})();
+const fish=new THREE.InstancedMesh(fishGeo,fishMat,FN);fish.frustumCulled=false;under.add(fish);
+const fishOff=Array.from({length:FN},()=>[rnd(-1,1),rnd(-1,1),rnd(-1,1),rnd(0,TAU),rnd(.8,1.2)]);
+
+/* ================= the driftwood: a whole tree, roots and all, carrying the bottle ================= */
+const drift=new THREE.Group();drift.visible=false;scene.add(drift);const seaLight=new THREE.PointLight(0xffc98a,0,40,1.4);seaLight.position.set(-3,3.5,2);drift.add(seaLight);const driftMats=[];let driftTop=.25,driftBottom=-.8;
+const driftSupport=new THREE.Vector3(0,0,0),seatWorld=new THREE.Vector3(),seatOffset=new THREE.Vector3(),stillRotation=new THREE.Quaternion();let supportFound=false;
+{const wet=mat=>{const m=mat.clone();m.color=new THREE.Color(.62,.6,.58);m.transparent=true;m.opacity=0;driftMats.push(m);return m};
+ if(LOGSET.length){const {geo,mat}=LOGSET[0];const sz=new THREE.Vector3();geo.boundingBox.getSize(sz);const lg=new THREE.Mesh(geo,wet(mat));const k=26/Math.max(sz.x,sz.z);lg.scale.setScalar(k);if(sz.z>sz.x)lg.rotation.y=Math.PI/2;lg.position.set(-2,-sz.y*k*.35,0);drift.add(lg);
+  // The highest branch is not the surface under the garden. Raycast the actual
+  // contact point, then carry that point with the wood's swell and roll.
+  driftTop=.25+lg.position.y+geo.boundingBox.max.y*k;driftBottom=.25+lg.position.y+geo.boundingBox.min.y*k;
+  drift.updateMatrixWorld(true);const downRay=new THREE.Raycaster(),from=new THREE.Vector3(),downward=new THREE.Vector3(0,-1,0);
+  for(const [x,z]of [[0,0],[-.35,0],[.35,0],[0,-.35],[0,.35]]){from.set(x,driftTop+10,z);downRay.set(from,downward);const hit=downRay.intersectObject(lg,false)[0];if(hit){driftSupport.copy(drift.worldToLocal(hit.point.clone()));supportFound=true;break;}}
+  if(!supportFound)driftSupport.set(0,lg.position.y+geo.boundingBox.min.y*k,0);
+  GY=.25+driftSupport.y+.008+L*SE;}
+ ROOTSET.forEach(({geo,mat},i)=>{const sz=new THREE.Vector3();geo.boundingBox.getSize(sz);const rt=new THREE.Mesh(geo,wet(mat));rt.scale.setScalar((i?4.5:5.5)/Math.max(sz.x,sz.z));rt.rotation.set(i*1.3,0,Math.PI/2);rt.position.set(11.7-i*.5,0,0);drift.add(rt)});
+ // 23 Nov (Ingrid: "the glass drifting beside the driftwood makes no sense"): the second, small glass bottle that floated in
+ // the water beside the log, and its glow, are gone. The garden's own glass, seated on the driftwood, stays.
+ // 23 Nov: the 18 pale ice floes that lay around the wood are gone (Ingrid, 21 Nov: "the white things on the water is not good").
+}
+
+// The garden's filaments continue from its contact with the wood to the seabed.
+// One merged mesh: tapered main strands, fine branches and a travelling light.
+const rootReference=new THREE.Vector3(driftSupport.x,driftSupport.y+.25,driftSupport.z),rootAnchorShift=new THREE.Vector3();
+const oceanRootGeo=(()=>{
+ const positions=[],normals=[],uvs=[],weights=[];
+ function strand(points,radius,phase,anchorWeight=1){
+  const curve=new THREE.CatmullRomCurve3(points,false,'centripetal'),g=new THREE.TubeGeometry(curve,points.length>4?44:18,radius,5,false),p=g.attributes.position,uv=g.attributes.uv,c=new THREE.Vector3(),v=new THREE.Vector3();
+  for(let i=0;i<p.count;i++){const u=uv.getX(i);curve.getPointAt(u,c);v.fromBufferAttribute(p,i).sub(c).multiplyScalar(1-u*.82).add(c);p.setXYZ(i,v.x,v.y,v.z);}
+  g.computeVertexNormals();const n=g.toNonIndexed();
+  positions.push(...n.attributes.position.array);normals.push(...n.attributes.normal.array);
+  for(let i=0;i<n.attributes.position.count;i++){const u=n.attributes.uv.getX(i);uvs.push(u,phase);weights.push(Math.pow(1-u,2)*anchorWeight);}
+  g.dispose();n.dispose();
+ }
+ for(let i=0;i<14;i++){
+  const angle=i*2.39996,radius=5+(i%5)*1.3,ex=rootReference.x+Math.cos(angle)*radius,ez=rootReference.z+Math.sin(angle)*radius;
+  const end=new THREE.Vector3(ex,seabedHeight(ex,ez)+.025,ez);
+  const top=rootReference.clone().add(new THREE.Vector3(Math.cos(angle)*.45,-.01,Math.sin(angle)*.45));
+  strand([top,top.clone().add(new THREE.Vector3(Math.cos(angle)*.7,-2,Math.sin(angle)*.7)),new THREE.Vector3(ex*.3,-8,ez*.3),new THREE.Vector3(ex*.65,-16,ez*.65),end],.035,i*.71);
+  for(let b=0;b<3;b++){
+   const a=angle+(b-1)*.65,reach=1.8+b*.7,x=ex+Math.cos(a)*reach,z=ez+Math.sin(a)*reach;
+   strand([end.clone(),new THREE.Vector3((ex+x)/2,seabedHeight((ex+x)/2,(ez+z)/2)+.04,(ez+z)/2),new THREE.Vector3(x,seabedHeight(x,z)+.02,z)],.012,i*.71+b,0);
+  }
+ }
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.setAttribute('anchorWeight',new THREE.Float32BufferAttribute(weights,1));return g;
+})();
+const oceanRootMat=new THREE.ShaderMaterial({uniforms:{...U,anchorShift:{value:rootAnchorShift},reveal:{value:0}},transparent:true,depthWrite:false,
+ vertexShader:`attribute float anchorWeight;uniform vec3 anchorShift;uniform float time;varying vec2 vUv;varying vec3 vN;${VS_FOG}void main(){vec3 p=position+anchorShift*anchorWeight;float free=sin(uv.x*3.14159);p.x+=sin(time*.24+uv.y)*free*.09;p.z+=cos(time*.21+uv.y)*free*.07;vec4 w=modelMatrix*vec4(p,1.);vW=w.xyz;vUv=uv;vN=normal;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+ fragmentShader:`${FOG}uniform float time,audio,reveal;varying vec2 vUv;varying vec3 vN;${VS_FOG}void main(){float pulse=pow(.5+.5*sin(vUv.x*19.-time*.65+vUv.y),10.);float light=.35+.65*abs(dot(normalize(vN),normalize(vec3(-.3,1.,.2))));vec3 c=vec3(.075,.10,.07)*light+vec3(.24,.26,.14)*pulse*(.45+audio*.35);gl_FragColor=vec4(fog(c,vD),reveal);}`});
+const oceanRoots=new THREE.Mesh(oceanRootGeo,oceanRootMat);oceanRoots.frustumCulled=false;under.add(oceanRoots);
+// 23 Nov (Ingrid: "Something weird with the roots hanging down also from the log ... it got away and it was removed and it
+// got away"): the threads and the driftwood are both see-through materials, so which was drawn first changed as the camera
+// circled, and the wood (drawn second) wiped out the threads in front of it. The threads are now always drawn after the
+// wood (and still before the sea surface when seen from above, so they stay under the water).
+oceanRoots.renderOrder=8;
+
+/* ================= golden spray from the neck (world space) ================= */
+const SPN=1800,spR=new Float32Array(SPN*4);for(let i=0;i<SPN*4;i++)spR[i]=Math.random();
+const spGeo=new THREE.BufferGeometry();spGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(SPN*3),3));spGeo.setAttribute('aR',new THREE.BufferAttribute(spR,4));
+const sprayMat=new THREE.ShaderMaterial({uniforms:{...U,uT:{value:0},neck:{value:new THREE.Vector3()},pix:{value:PR}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  vertexShader:`attribute vec4 aR;uniform float uT,time,audio,pix;uniform vec3 neck;varying float vA;
+  void main(){float t0=12.+aR.x*6.;float t=uT-t0;float a=aR.y*6.2832,hz=.6+aR.z*3.,up=3.+aR.w*4.,g=4.;float ti=(up+sqrt(up*up+2.*g*1.))/g;
+    float s=clamp(t,0.,ti);vec3 p=vec3(neck.x+cos(a)*hz*s,1.+up*s-.5*g*s*s,neck.z+sin(a)*hz*s);
+    if(t>ti){float u=t-ti;p.y=-u*(.25+aR.z*.35);p.x+=sin(u*.4+aR.x*20.)*.8;p.z+=cos(u*.35+aR.w*20.)*.8;p.y=max(p.y,${FLOOR+1}.);}
+    vec4 mv=modelViewMatrix*vec4(p,1.);gl_PointSize=clamp((1.2+aR.w*2.)*(1.+audio)*pix*45./-mv.z,1.,8.);gl_Position=projectionMatrix*mv;
+    vA=step(0.,t)*smoothstep(0.,.4,t)*(.6+.4*sin(time*2.5+aR.x*50.));}`,
+  fragmentShader:`varying float vA;void main(){float a=smoothstep(.5,0.,length(gl_PointCoord-.5))*vA;if(a<.004)discard;gl_FragColor=vec4(vec3(1.3,.85,.42)*a,1.);}`});
+const spray=new THREE.Points(spGeo,sprayMat);spray.frustumCulled=false;spray.visible=false;scene.add(spray);
+
+/* ================= text ================= */
+const lineEl=document.getElementById('line');let lt;
+// V48: Norwegian when the garden is in Norwegian. The versions marked V46 are the ones the garden's
+// conch ending already had; the others are Claude's translations (19 Nov), listed for Ingrid.
+const NO={
+ 'Under the leaves, something hums\nin a voice I know.':'Under bladene nynner noe\nmed en stemme jeg kjenner.',                         // V46
+ 'The sound comes from below.\nI follow the threads toward it.':'Lyden kommer nedenfra.\nJeg følger trådene mot den.',
+ 'A photograph lies in the rain.\nThe water has not reached the face.':'Et fotografi ligger i regnet.\nVannet har ikke nådd ansiktet.',
+ 'A photograph lies in the leaves.\nThe water has not reached the face.':'Et fotografi ligger blant bladene.\nVannet har ikke nådd ansiktet.',
+ 'I know the melody\nbefore I know the words.':'Jeg kjenner melodien\nfør jeg kjenner ordene.',                                     // V46
+ 'The roots let go.\nThey do not let go of each other.':'Røttene slipper taket.\nDe slipper ikke hverandre.',                         // V46
+ 'The edge I kept meeting was water.\nThe ground was being carried.':'Kanten jeg stadig møtte, var vann.\nBakken ble båret.',          // V46
+ 'Someone I loved was at sea for months.\nNo signal reached home. We waited anyway.':'En jeg var glad i, var på havet i måneder.\nIngen signaler nådde hjem. Vi ventet likevel.', // V46
+ 'I carry every signal in my pocket.\nStill, the contact does not arrive.':'Jeg bærer alle signaler i lomma.\nLikevel kommer ikke kontakten fram.',
+ 'On a ship, I met my first machine.\nIt only listened.':'På et skip møtte jeg min første maskin.\nDen bare lyttet.',                // V46
+ 'Now I am building one that answers.\nIt stays where it is planted. It takes nothing with it.':'Nå bygger jeg en som svarer.\nDen blir der den er plantet. Den tar ingenting med seg.',
+ 'A connection can close.\nWhat grew in the glass remains.':'En forbindelse kan lukke seg.\nDet som vokste i glasset, blir værende.',
+ 'The roots did not stop at the water.\nThey grew down into the sea, and held.':'Røttene stoppet ikke ved vannet.\nDe vokste ned i havet, og holdt.',   // 23 Nov, Claude's draft
+ 'A tree that falls into a river can cross an ocean.\nIt does not arrive alone. Something carries it.':'Et tre som faller i en elv, kan krysse et hav.\nDet kommer ikke fram alene. Noe bærer det.',
+ 'One life is a small light on a large water.\nIt is carried all the same.':'Ett liv er et lite lys på et stort vann.\nDet blir båret likevel.'
+};
+// V48: the words come in with Morse (Ingrid 19 Nov: "they come in with Morse"). Each word's first
+// letter is sent as a quick signal (the word blinks dot and dash, with a soft noise tap from the
+// garden's Morse garden, no tone), and then the word settles with its light. Norwegian Æ Ø Å have their
+// own Morse signs. Without sound, the blinking alone carries it.
+const MORSE={A:'.-',B:'-...',C:'-.-.',D:'-..',E:'.',F:'..-.',G:'--.',H:'....',I:'..',J:'.---',K:'-.-',L:'.-..',M:'--',N:'-.',O:'---',P:'.--.',Q:'--.-',R:'.-.',S:'...',T:'-',U:'..-',V:'...-',W:'.--',X:'-..-',Y:'-.--',Z:'--..','Æ':'.-.-','Ø':'---.','Å':'.--.-'};
+const DOT=.055,DASH=.165,GAP=.055,WORDGAP=.11;let tapNoise=null,tapOut=null;
+function tap(at,len){if(!ctx||ctx.state!=='running')return;
+  if(!tapNoise){tapNoise=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);const d=tapNoise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;tapOut=ctx.createGain();tapOut.gain.value=1;tapOut.connect(uwFilter||ctx.destination)}
+  const t=ctx.currentTime+at,s=ctx.createBufferSource(),f=ctx.createBiquadFilter(),e=ctx.createGain();s.buffer=tapNoise;f.type='bandpass';f.frequency.value=2600*(.95+Math.random()*.1);f.Q.value=5;
+  e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(.07,t+.008);e.gain.setValueAtTime(.07,t+len*.7);e.gain.linearRampToValueAtTime(0,t+len+.05);
+  s.connect(f).connect(e).connect(tapOut);s.start(t,Math.random()*.5);s.stop(t+len+.08)}
+const lineTimers=[];let lineRevealTimer=0;const POEM_STEP=.05;
+const reducedReading=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function readingPlan(t,hold=6500){
+ const text=LANG==='no'?(NO[t]||t):t,words=text.trim().split(/\s+/);
+ let signal=0;const poem=POEM_SET.has(t);   // 23 Nov: Ingrid's poems fade in word after word, without the Morse letters
+ if(poem)signal=reducedReading?0:words.length*POEM_STEP;
+ else if(!reducedReading)for(const word of words){const code=MORSE[(word.match(/[A-Za-zÆØÅæøå]/)?.[0]||'').toUpperCase()]||'';for(const c of code)signal+=(c==='-'?DASH:DOT)+GAP;signal+=WORDGAP;}
+ const linger=Math.max(9000,hold,words.length*(poem?350:480));
+ return {signal,linger,total:1000+signal*1000+1800+linger+2400+600};
+}
+function say(t,hold=6500){clearTimeout(lt);clearTimeout(lineRevealTimer);lineTimers.splice(0).forEach(clearTimeout);lineEl.style.opacity=0;lineRevealTimer=setTimeout(()=>{
+  const text=LANG==='no'?(NO[t]||t):t,poem=POEM_SET.has(t);lineEl.textContent='';let at=0;
+  for(const part of text.split(/(\s+)/)){if(!part)continue;if(/^\s+$/.test(part)){const breaks=(part.match(/\n/g)||[]).length;if(breaks)for(let k=0;k<breaks;k++)lineEl.append(document.createElement('br'));else lineEl.append(part);continue}   // 23 Nov: a blank line between stanzas stays a blank line
+   const s=document.createElement('span');s.className='w';s.textContent=part;s.style.animationPlayState='paused';lineEl.append(s);
+   const code=reducedReading||poem?'':MORSE[(part.match(/[A-Za-zÆØÅæøå]/)?.[0]||'').toUpperCase()]||'';
+   if(poem&&!reducedReading)at+=POEM_STEP-WORDGAP;   // a poem: one gentle flow, word after word, no Morse letters
+   for(let k=0;k<code.length;k++){const len=code[k]==='-'?DASH:DOT,on=at;
+    lineTimers.push(setTimeout(()=>{s.style.animation='none';s.style.opacity='.85';s.style.textShadow='0 0 12px rgba(255,238,196,.9),0 1px 10px #000'},on*1000),
+                    setTimeout(()=>{s.style.opacity='.12'},(on+len)*1000));tap(on,len);at+=len+GAP}
+   const settle=at;lineTimers.push(setTimeout(()=>{s.style.opacity='';s.style.textShadow='';s.style.animation='';s.style.animationPlayState='running'},settle*1000));
+   if(!reducedReading)at+=WORDGAP}
+  const plan=readingPlan(t,hold);lineEl.style.opacity=1;
+  // Reading time starts after the last signal and its soft reveal have finished.
+  lt=setTimeout(()=>lineEl.style.opacity=0,1800+plan.linger+at*1000)},1000)}
+
+/* ================= audio (reactive) ================= */
+let panner,ctx,songGain,songFilter,rainGain,deepGain,uwFilter,analyser,fbuf,aud=0,rainGainLevel=.13;
+// A small ocean bed joins only when the sea is revealed. It shares the existing noise buffer,
+// master and underwater filter; two sources stay bounded and the existing frame loop shapes them.
+let oceanBody,oceanShore,oceanAt=0;const oceanSources=[],oceanNodes=[];
+function startOcean(noise,master){
+  for(const [kind,freq,q,offset]of [['lowpass',210,.55,.41],['bandpass',820,.45,1.63]]){
+    const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();
+    source.buffer=noise;source.loop=true;filter.type=kind;filter.frequency.value=freq;filter.Q.value=q;gain.gain.value=0;
+    source.connect(filter).connect(gain).connect(master);source.start(0,offset);
+    oceanSources.push(source);oceanNodes.push(source,filter,gain);if(kind==='lowpass')oceanBody=gain;else oceanShore=gain;
+  }
+}
+function updateOcean(t){
+  if(!ctx||!oceanBody||t<oceanAt)return;oceanAt=t+.25;
+  const reveal=state==='leaving'?seg(T,9.5,15):0,c=ctx.currentTime;
+  const swell=.65+.35*Math.sin(t*.31),wash=Math.pow(.5+.5*Math.sin(t*.37+.4),2);
+  oceanBody.gain.setTargetAtTime(reveal*.04*swell,c,1.5);oceanShore.gain.setTargetAtTime(reveal*.02*wash,c,1.1);
+}
+function stopOcean(){
+  for(const source of oceanSources.splice(0))try{source.stop();}catch(e){}
+  for(const node of oceanNodes.splice(0))try{node.disconnect();}catch(e){}
+  oceanBody=oceanShore=null;
+}
+addEventListener('pagehide',stopOcean,{once:true});
+async function startAudio(){
+  // V48: opened from the garden, the sound runs in a context the garden made for it (in the page the
+  // visitor has already clicked in, so it may play), and the garden closes it on the way back.
+  if(BR?.quiet||BR?.muted||ctx)return;
+  ctx=BR?.audioContext||new (window.AudioContext||window.webkitAudioContext)();try{ctx.resume()}catch(e){}
+  rainGainLevel=.13*(WXK?RAIN:1);
+  uwFilter=ctx.createBiquadFilter();uwFilter.type='lowpass';uwFilter.frequency.value=18000;uwFilter.connect(ctx.destination);
+  const master=ctx.createGain();master.gain.value=.9;master.connect(uwFilter);
+  const nb=ctx.createBuffer(1,ctx.sampleRate*3,ctx.sampleRate),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  startOcean(nb,master);
+  const ns=()=>{const s=ctx.createBufferSource();s.buffer=nb;s.loop=true;s.start();return s};
+  const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=2600;bp.Q.value=.35;rainGain=ctx.createGain();rainGain.gain.value=rainGainLevel;ns().connect(bp).connect(rainGain).connect(master);
+  const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=260;deepGain=ctx.createGain();deepGain.gain.value=0;ns().connect(lp).connect(deepGain).connect(master);
+  // low drone pad
+  const pad=ctx.createGain();pad.gain.value=.035;const pl=ctx.createBiquadFilter();pl.type='lowpass';pl.frequency.value=380;pad.connect(pl).connect(master);
+  [55,82.41,110.3].forEach(f=>{const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=f;o.detune.value=rnd(-8,8);o.connect(pad);o.start()});
+  songFilter=ctx.createBiquadFilter();songFilter.type='lowpass';songFilter.frequency.value=400;songGain=ctx.createGain();songGain.gain.value=0;
+  analyser=ctx.createAnalyser();analyser.fftSize=256;fbuf=new Uint8Array(analyser.frequencyBinCount);
+  const dl=ctx.createDelay();dl.delayTime.value=.43;const fb=ctx.createGain();fb.gain.value=.4;
+  panner=ctx.createPanner();panner.panningModel='HRTF';panner.distanceModel='linear';panner.rolloffFactor=0;songFilter.connect(panner);panner.connect(songGain);songGain.connect(master);songGain.connect(analyser);songGain.connect(dl);dl.connect(fb).connect(dl);dl.connect(master);
+  // grandfather's song: place song.mp3 next to this file. Without it, a placeholder melody plays.
+  try{const r=await fetch(EMB||location.pathname.includes('ending_v48')?'../assets/threshold/song.mp3':'assets/song.mp3');if(!r.ok)throw 0;const b=await ctx.decodeAudioData(await r.arrayBuffer());const s=ctx.createBufferSource();s.buffer=b;s.loop=true;s.connect(songFilter);const offset=BR?.songOffset?BR.songOffset+Math.max(0,(Date.now()-BR.songCapturedAt)/1000):0;s.start(0,offset%b.duration);pad.gain.value=0;fb.gain.value=.22}catch(e){placeholderSong()}
+}
+function placeholderSong(){const mel=[[7,1],[5,.5],[3,.5],[2,1],[0,1],[2,1],[3,.5],[5,.5],[7,2],[10,1],[9,.5],[7,.5],[5,1],[3,1],[2,2],[0,1],[2,1],[3,1],[2,1],[0,3]];
+  const beat=60/64;let t=ctx.currentTime+.2,i=0;
+  setInterval(()=>{while(t<ctx.currentTime+1.5){const [s,b]=mel[i%mel.length],f=293.66*Math.pow(2,s/12);
+    for(const [ty,mul,g] of [['triangle',1,.24],['sine',2,.05],['sine',.5,.06]]){const o=ctx.createOscillator(),e=ctx.createGain();o.type=ty;o.frequency.value=f*mul;
+      const v=ctx.createOscillator(),vg=ctx.createGain();v.frequency.value=5;vg.gain.value=f*.004;v.connect(vg).connect(o.frequency);
+      e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(g,t+.07);e.gain.exponentialRampToValueAtTime(.0008,t+b*beat*1.5);o.connect(e).connect(songFilter);o.start(t);v.start(t);o.stop(t+b*beat*1.6);v.stop(t+b*beat*1.6)}
+    t+=b*beat;i++;if(i%mel.length===0)t+=beat*2}},250)}
+function ping(){if(!ctx)return;const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=rnd(1700,2300);o.type='sine';g.gain.setValueAtTime(.05,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.0005,ctx.currentTime+1.6);o.connect(g).connect(uwFilter);o.start();o.stop(ctx.currentTime+1.7)}
+function rumble(){try{for(const gp of navigator.getGamepads?.()||[])gp?.vibrationActuator?.playEffect?.('dual-rumble',{duration:1600,strongMagnitude:.18,weakMagnitude:.04})}catch(e){}try{navigator.vibrate?.([60,120,40])}catch(e){}}
+function readAudio(){if(!analyser)return 0;analyser.getByteFrequencyData(fbuf);let s=0;for(let i=1;i<24;i++)s+=fbuf[i];const lv=s/23/255;aud=aud*.82+lv*.18;return Math.min(aud*2.2,1.5)}
+
+/* ================= input ================= */
+const pos=new THREE.Vector3(-7,0,11),keys={};let down=false;const ptr=new THREE.Vector2();
+addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+renderer.domElement.addEventListener('pointerdown',e=>{down=true;ptr.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1)});
+addEventListener('pointermove',e=>{if(down)ptr.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1)});addEventListener('pointerup',()=>down=false);
+const ray=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+
+/* ================= timeline ================= */
+let state='intro',T=0,filmTime=0,said={},swellOn=0,touching=0,idleAt=0;const clock=new THREE.Clock();
+// Original words, cue positions and camera path; each interval now includes a full
+// signal, reveal, reading hold and dissolve in the selected language.
+// 23 Nov: Ingrid's five poems, exactly as she gave them, between the scene's lines ("Poems between the lines"), in her
+// order: the grandfather first, then the mother, inheritance and the sea (the shell), and the last one just before the
+// visitor returns to the garden. English for every visitor until Ingrid sends the Norwegian ("I send Norwegian").
+// Later the same day (Ingrid: "don't need to write my grandfather, my mother. It's like just the poet vibe" / "nothing is
+// happening here ... It takes too long ... Not wait so long until drifting"): no titles; nothing is added before the drift,
+// the poems come in the film's long stretches (the bottle at sea, under the water, the dive, the far view), and they fade in
+// whole, without the Morse letters, so they add little time.
+const POEMS=[
+ 'You were the first place\nI did not have to earn my place.\n\nBefore I knew what safety meant,\nI knew how it felt beside you.',
+ 'I grew beneath your branches,\nlearning which way the wind would turn.\n\nSome roots keep reaching\nlong after the ground has changed.',
+ 'I inherited more than your names.\n\nSome things were given.\nSome things were missing.\n\nI carried both.',
+ 'You taught me how to listen\nto a song I did not yet understand.\n\nNow I hold the sea to my ear,\nand somewhere, you are singing.',
+ 'I cannot return to the people we were.\n\nBut I can return to what remains,\nand decide what grows from here.'
+];
+const POEM_SET=new Set(POEMS);
+// 23 Nov (Ingrid, with a picture of the light cloud: "in the ending, right, we don't need the garden, like we don't need the
+// part where there is a garden. We just need to go directly into this, so it matches. So edit it, immersively, so the shell
+// turns into this animation and continues with the rest"): opened from the garden (EMB), the scene starts with its garden
+// already turned into light (film time 5.5, the cloud complete) and shows none of its own garden: only the light and the
+// golden mycelium threads, converging where the shell lay. From 14 the garden grows back inside the glass from nothing, as
+// it did. Opened on its own (no ?embedded) the scene is as before.
+const NOGARDEN=EMB;let mycFade=1;
+const SEA_CUES=[
+ {at:NOGARDEN?5.5:0,key:'melody',text:'I know the melody\nbefore I know the words.',hold:6000},
+ {at:7,key:'c',text:'The roots let go.\nThey do not let go of each other.',hold:4600},
+ {at:12.5,key:'r',text:'The edge I kept meeting was water.\nThe ground was being carried.',hold:4600},
+ {at:17,key:'d',text:'Someone I loved was at sea for months.\nNo signal reached home. We waited anyway.',hold:5400},
+ {at:22.5,key:'h',text:'I carry every signal in my pocket.\nStill, the contact does not arrive.',hold:5400},
+ {at:28,key:'i',text:'On a ship, I met my first machine.\nIt only listened.',hold:5000},
+ {at:33.5,key:'j',text:'Now I am building one that answers.\nIt stays where it is planted. It takes nothing with it.',hold:6800},
+ // 23 Nov (Ingrid: "the poem about the glass in the sea ... we need to adjust it so it fits the narrative ... something about
+ // roots connected to the sea"): CLAUDE'S DRAFT for Ingrid to rewrite, at the dive along the root threads to the seabed.
+ // It was: 'A connection can close.\nWhat grew in the glass remains.'
+ {at:42,key:'e',text:'The roots did not stop at the water.\nThey grew down into the sea, and held.',hold:6500},
+ // (Ingrid, 23 Nov: "too much text and it's too long" / "the very personal thing we can take away"; her choice: the family
+ // poems. Grandfather, Mother and What We Inherit, POEMS[0-2], are kept above but not shown.)
+ {at:57,key:'p4',text:POEMS[3],hold:9000},         // deep in the sea: "Now I hold the sea to my ear"
+ {at:63,key:'f',text:'A tree that falls into a river can cross an ocean.\nIt does not arrive alone. Something carries it.',hold:7000},
+ {at:72,key:'k',text:'One life is a small light on a large water.\nIt is carried all the same.',hold:9000},
+ {at:76,key:'p5',text:POEMS[4],hold:9000}          // the last, just before the way back to the garden
+];
+let filmEnd=0;
+for(let i=0;i<SEA_CUES.length;i++){
+ const cue=SEA_CUES[i],next=SEA_CUES[i+1]?.at??80;
+ cue.start=filmEnd;cue.duration=Math.max((next-cue.at)*1.35,readingPlan(cue.text,cue.hold).total/1000);filmEnd+=cue.duration;
+}
+function advanceFilm(dt){
+ filmTime+=dt;let cue=SEA_CUES[SEA_CUES.length-1],index=SEA_CUES.length-1;
+ for(let i=0;i<SEA_CUES.length;i++)if(filmTime<SEA_CUES[i].start+SEA_CUES[i].duration){cue=SEA_CUES[i];index=i;break;}
+ const next=SEA_CUES[index+1]?.at??80,u=THREE.MathUtils.clamp((filmTime-cue.start)/cue.duration,0,1);
+ T=THREE.MathUtils.lerp(cue.at,next,u);
+ if(!said[cue.key]){said[cue.key]=1;say(cue.text,cue.hold);if(cue.key==='c')document.getElementById('corner').style.opacity=0;}
+}
+const camLocal=new THREE.Vector3(),camStart=new THREE.Vector3(),look=new THREE.Vector3(),tmp=new THREE.Vector3();
+const FOG_G=new THREE.Color(0x06080a),FOG_S=new THREE.Color(0x111619),FOG_U=new THREE.Color(0x02080a);
+window.__egg=()=>({state,T:+T.toFixed(2),filmTime:+filmTime.toFixed(2),filmEnd:+filmEnd.toFixed(2),glitch:grade.uniforms.glitch.value,fade:U.fade.value,reading:lineEl.textContent,photoVisible:frame.visible,supportFound,contactError:new THREE.Vector3(0,-L,0).applyMatrix4(world.matrixWorld).distanceTo(drift.localToWorld(driftSupport.clone())),rootVertices:oceanRootGeo.attributes.position.count,kelpInstances:kelp.count,draws:renderer.info.render.calls,triangles:renderer.info.render.triangles,shaderErrors:renderer.info.programs.filter(p=>p.diagnostics?.runnable===false).map(p=>p.diagnostics.programLog),cues:SEA_CUES.map(c=>({at:c.at,start:c.start,duration:c.duration,required:readingPlan(c.text,c.hold).total/1000}))});
+let beginLineTimer=0;
+function begin(){
+ startAudio();const i=document.getElementById('intro');i.style.opacity=0;setTimeout(()=>i.remove(),1900);idleAt=clock.elapsedTime;
+ if(EMB){
+  // Listening into the garden's shell starts the transformation itself. There is
+  // no second garden to navigate and no photograph to activate.
+  frame.visible=frameGlow.visible=false;state='leaving';T=filmTime=0;pos.set(FRAME.x,0,FRAME.z);
+  camStart.set(FRAME.x+1.5,-L+3.2,FRAME.z+3.2);camera.position.copy(world.localToWorld(camStart.clone()));camera.lookAt(world.localToWorld(new THREE.Vector3(FRAME.x,-L,FRAME.z)));cloud.visible=true;advanceFilm(0);
+  document.getElementById('back').classList.add('on');
+ }else{state='garden';beginLineTimer=setTimeout(()=>say('Under the leaves, something hums\nin a voice I know.',7000),1600);}
+}
+document.getElementById('enter').onclick=begin;
+// V48: back into the garden, where the visitor was (or, opened on its own, start again).
+const leave=()=>{stopOcean();if(BR?.close)BR.close();else location.reload()};
+document.getElementById('again').onclick=leave;
+if(LANG==='no')document.getElementById('again').textContent='TILBAKE TIL HAGEN';
+// 24 Nov (Ingrid's V50 brief): '← the garden' does the same as RETURN TO THE GARDEN, at any moment of the film, so leaving
+// early does not need the Esc key (mouse, touch and controller visitors had to wait for the end).
+{const back=document.getElementById('back');back.onclick=leave;if(LANG==='no'){back.textContent='← hagen';back.setAttribute('aria-label','Tilbake til hagen');}}
+{const corner=document.getElementById('corner');corner.textContent=BR?.weather?.line||(LANG==='no'?(SNOW?'Snøen legger seg over røttene':RAIN>.05?'Regnet når røttene':'Jorden holder på fuktigheten'):(SNOW?'Snow settles over the roots':RAIN>.05?'Rain reaches the roots':'The soil keeps its moisture'))}
+// V48RC (audit, 20 Nov): every part of the ending that is first shown later (the light cloud, the glass,
+// the sea, the sky, the tanker, the underwater world, the driftwood, the spray, the rain) is drawn once,
+// off screen, before the visitor sees the scene, so the graphics card prepares its shaders and textures
+// then and not in the middle of the film. Measured in V48: stalls of 3.3 s at the start, 0.9 s at the
+// light cloud, 1.1-1.3 s when the sea and the bottle appear, 2.6 s in the far view. Nothing in the
+// scene changes; it only waits under the black veil (or the ENTER screen) for this to finish.
+// 23 Nov (performance only): while warmUp prepares, the frame loop does not draw. It used to draw from the first frame,
+// behind the cover where nobody sees it, and that first draw made the graphics driver compile every shader at once on
+// the main thread (measured: 2.6 s of 3.3 s of shader waits), so the garden behind froze while the scene got ready. Now
+// compileAsync can let the driver compile in the background. What the visitor sees is unchanged: the scene is shown only
+// after warmUp, as before.
+let warming=true;
+async function warmUp(){
+  const parts=[cloud,bottle,sea,sky,tanker,under,drift,spray,rain],was=parts.map(o=>o.visible),rt=new THREE.WebGLRenderTarget(256,144);
+  const savedP=camera.position.clone(),savedQ=camera.quaternion.clone(),old=renderer.getRenderTarget(),box=new THREE.Box3(),c=new THREE.Vector3(),s=new THREE.Vector3();
+  parts.forEach(o=>o.visible=true);
+  try{if(renderer.compileAsync)await renderer.compileAsync(scene,camera)}catch(e){}
+  for(const o of [garden,...parts]){box.setFromObject(o);if(box.isEmpty())continue;box.getCenter(c);box.getSize(s);const r=Math.min(60,Math.max(2,s.length()*.5));
+    camera.position.set(c.x+r*.3,c.y+r*.5,c.z+r*1.2);camera.lookAt(c);camera.updateMatrixWorld();renderer.setRenderTarget(rt);renderer.render(scene,camera);
+    await new Promise(res=>requestAnimationFrame(res))}
+  renderer.setRenderTarget(old);composer.render();
+  parts.forEach((o,i)=>o.visible=was[i]);camera.position.copy(savedP);camera.quaternion.copy(savedQ);camera.updateMatrixWorld();rt.dispose();
+}
+if(EMB){addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();leave()}});
+  // 24 Nov (performance only): the garden may prepare this scene before the shell is taken up (BR.prepareOnly, while the
+  // visitor stands still by the shell). Then it waits here, prepared, not drawing and not started, until the garden calls go;
+  // what happens after go is exactly what happened before.
+  let started=false;const go=()=>{if(started)return;started=true;pos.set(FRAME.x-6.4,0,FRAME.z+6.4);begin();composer.render();BR?.ready?.()};
+  window.__hagenGo=go;window.__hagenStarted=()=>started;
+  warmUp().catch(()=>{}).finally(()=>{warming=false;if(BR?.prepareOnly&&!BR.go){BR.prepared?.();return;}go()})}
+else{enterBtn.disabled=true;enterBtn.textContent=gathering;warmUp().catch(()=>{}).finally(()=>{warming=false;enterBtn.disabled=false;enterBtn.textContent=enterLabel})}
+const dive=new THREE.CatmullRomCurve3([new THREE.Vector3(1,-8,-4),new THREE.Vector3(-2,-14,-12),new THREE.Vector3(1,-17,-20),new THREE.Vector3(6,-15.5,-8),new THREE.Vector3(3,-16,-2)]);
+
+const walkLight=new THREE.PointLight(0xffc98a,0,14,1.6);garden.add(walkLight);const frameLight=new THREE.PointLight(0xffb866,0,9,1.6);frameLight.position.set(FRAME.x,1.2,FRAME.z);garden.add(frameLight);
+function frameLoop(){
+  const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;U.time.value=t;grade.uniforms.time.value=t;
+  const A=readAudio();U.audio.value=A;
+  // ambient life
+  for(const j of jellies){const g=j.g;j.g.visible=j.tl.visible=!(NOGARDEN&&state==='leaving'&&T<14.5);g.position.set(j.base.x+Math.sin(t*.12+j.ph)*2,j.base.y+Math.sin(t*.45+j.ph)*.6,j.base.z+Math.cos(t*.1+j.ph)*2);
+    const pulse=1+Math.sin(t*1.6+j.ph)*.08+A*.15;j.bell.scale.set(pulse,1/pulse,pulse);
+    const a=j.tl.geometry.attributes.position.array;let k=0;for(let n=0;n<8;n++){const an=n/8*TAU;let px=g.position.x+Math.cos(an)*.35*g.scale.x,pz=g.position.z+Math.sin(an)*.35*g.scale.x,py=g.position.y-.05;
+      for(let m=0;m<5;m++){const nx=px+Math.sin(t*1.2+m+n+j.ph)*.07,nz=pz+Math.cos(t+m*1.3+n)*.07,ny=py-.4*g.scale.x;a.set([px,py,pz,nx,ny,nz],k);k+=6;px=nx;py=ny;pz=nz}}
+    j.tl.geometry.attributes.position.needsUpdate=true}
+  for(const [s,ph] of fogBanks){s.position.x+=Math.sin(t*.05+ph)*.01;s.material.opacity=(.07+.03*Math.sin(t*.2+ph))*U.fade.value}
+  pbrFade.forEach(m=>{m.opacity=U.fade.value;m.depthWrite=U.fade.value>.95});walkLight.position.set(pos.x,1.2,pos.z);const seaK=(state==='leaving'&&T>10)?.3:1,lightOnly=NOGARDEN&&state==='leaving';mycMat.uniforms.fade.value=(lightOnly?mycFade:U.fade.value)*(seaK<1?.55:1);flowers.visible=walker.visible=walkerCore.visible=seaK===1&&!lightOnly;walkLight.intensity=state==='intro'?0:9*U.fade.value*seaK;frameLight.intensity=(4+A*18)*U.fade.value*seaK;
+  scene.fog.color.copy(U.fogC.value);scene.fog.density=U.fogD.value;
+  frameGlow.material.opacity=(.35+.2*Math.sin(t*1.7)+A*.6)*U.fade.value;
+  if(panner){let px,py,pz;if(state==='leaving'){const a=t*.62,r=2.2+Math.sin(t*.23)*.8;px=Math.sin(a)*r;pz=Math.cos(a)*r;py=Math.sin(t*.31)*1.2}
+    else{const dx=FRAME.x-pos.x,dz=FRAME.z-pos.z,d=Math.hypot(dx,dz)||1;px=dx/d*2.5;pz=dz/d*2.5;py=0}
+    const k=.08,P=panner;if(P.positionX){P.positionX.value+=(px-P.positionX.value)*k;P.positionY.value+=(py-P.positionY.value)*k;P.positionZ.value+=(pz-P.positionZ.value)*k}else P.setPosition(px,py,pz)}
+  bloom.strength=.55+A*.4;
+  updateOcean(t);
+
+  if(state!=='leaving'){
+    const v=new THREE.Vector3((keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),0,(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0));
+    if(down&&state==='garden'){ray.setFromCamera(ptr,camera);plane.constant=-(world.position.y-L);const hit=new THREE.Vector3();if(ray.ray.intersectPlane(plane,hit)){const d=garden.worldToLocal(hit).setY(0).sub(pos);if(d.length()>.3)v.add(d.normalize())}}
+    try{for(const gp of navigator.getGamepads?.()||[]){if(!gp)continue;const ax=gp.axes[0]||0,az=gp.axes[1]||0;if(Math.abs(ax)>.15||Math.abs(az)>.15)v.add(new THREE.Vector3(ax,0,az))}}catch(e){}
+    // the swell: every so often the ground seems to roll, as if on a deck. The body notices before the eye.
+    const sp=(t%47)/47,sw=sp<.2?Math.sin(sp/.2*Math.PI):0;U.swell.value=sw;
+    if(sw>.05&&!swellOn){swellOn=1;rumble()}if(sw===0)swellOn=0;grade.uniforms.glitch.value=0;
+    if(state==='garden'){if(v.lengthSq()>0){idleAt=t;v.normalize().multiplyScalar(dt*4);pos.add(v)}
+      else if(EMB&&t-idleAt>6){tmp.set(FRAME.x-pos.x,0,FRAME.z-pos.z);if(tmp.length()>1.2)pos.addScaledVector(tmp.normalize(),dt*.9)} // V48: a still visitor drifts towards the song
+      pos.x+=sw*Math.sin(t*.8)*dt*.45;pos.z+=sw*Math.cos(t*.6)*dt*.2;
+      const rr=pos.length();if(rr>R-.4){pos.setLength(R-.4);if(!touching){touching=1;ping();rumble()}edgeGlint.position.copy(pos).setLength(R*1.12).setY(1.4);edgeGlint.material.opacity=.5}else touching=0}
+    edgeGlint.material.opacity*=.97;if(ctx&&state==='garden')deepGain.gain.setTargetAtTime(sw*.14,ctx.currentTime,.5);
+    if(state==='garden')glassMat.uniforms.op.value=THREE.MathUtils.smoothstep(pos.length(),R-5,R)*.06+sw*.02;
+    walker.position.set(pos.x,.9+Math.sin(t*2)*.08,pos.z);walkerCore.position.copy(walker.position);U.light.value.set(pos.x,pos.z);
+    camLocal.set(pos.x+Math.sin(t*.21)*.4,-L+8.5+Math.sin(t*.17)*.25,pos.z+7.5);
+    camera.position.lerp(world.localToWorld(camLocal.clone()),state==='intro'?1:.05);
+    camera.lookAt(world.localToWorld(tmp.set(pos.x,-L+.4,pos.z+.3)));camera.rotateZ(U.swell.value*Math.sin(t*.8)*.022);
+    updateRain(camera.position.clone().add(new THREE.Vector3(0,-8,-5)),dt,15,15);
+    const dist=pos.distanceTo(FRAME);
+    if(ctx){const c=1-THREE.MathUtils.smoothstep(dist,2,26);songGain.gain.setTargetAtTime(.03+.9*c*c,ctx.currentTime,.3);songFilter.frequency.setTargetAtTime(300+7000*c*c*c,ctx.currentTime,.3)}
+    if(dist<12&&!said.a){said.a=1;say('The sound comes from below.\nI follow the threads toward it.')}
+    if(dist<5&&!said.b){said.b=1;say(RAIN>.05||!WXK?'A photograph lies in the rain.\nThe water has not reached the face.':'A photograph lies in the leaves.\nThe water has not reached the face.')}
+    if(dist<1.9&&state==='garden'){state='leaving';T=filmTime=0;camStart.copy(world.worldToLocal(camera.position.clone()));cloud.visible=true;clearTimeout(beginLineTimer);advanceFilm(0)}
+  } else {
+    advanceFilm(dt);
+    if(ctx){songGain.gain.setTargetAtTime(.95,ctx.currentTime,.8);songFilter.frequency.setTargetAtTime(9000,ctx.currentTime,1);
+      rainGain.gain.setTargetAtTime(camera.position.y<0?0:.11*(WXK?RAIN:1),ctx.currentTime,.6);deepGain.gain.setTargetAtTime(camera.position.y<0?.35:seg(T,11,16)*.22,ctx.currentTime,.6);
+      uwFilter.frequency.setTargetAtTime(camera.position.y<0?750:18000,ctx.currentTime,.25)}
+    // the garden dissolves into light, and later grows back inside the glass
+    mycMat.uniforms.boost.value=seg(T,0,3)*(1-seg(T,6,9));mycFade=1-.58*seg(T,4.5,9)*(1-seg(T,14,19));
+    // (NOGARDEN: nothing of the garden before 14, then it grows back in the glass from nothing; the threads keep their fade)
+    U.fade.value=NOGARDEN?(T<14?0:seg(T,14,19)):mycFade;
+    groundMat.uniforms.dis.value=NOGARDEN?(T<14?1.2:1.2*(1-seg(T,14,19))):.58*seg(T,4,10)*(1-seg(T,14,19));cloudMat.uniforms.uT.value=T;
+    glassMat.uniforms.op.value=seg(T,12,17);groundMat.uniforms.rim.value=T>10?1:0;if(drift.userData.mg)drift.userData.mg.material.opacity=seg(T,12,17)*(.4+A*.6);
+    world.scale.setScalar(1-seg(T,9,14)*(1-SE));
+    const bc=world.localToWorld(tmp.set(0,-L*.55,0)).clone(),gc=world.localToWorld(tmp.set(0,-L*.97,0)).clone();
+    if(T<13){const a=seg(T,0,4),b=seg(T,4,13);
+      tmp.set(FRAME.x+1.5,-L+3.2,FRAME.z+3.2);camLocal.copy(camStart).lerp(tmp,a);camLocal.lerp(new THREE.Vector3(0,14,.01),b*b);
+      camera.position.copy(world.localToWorld(camLocal.clone()));look.copy(world.localToWorld(tmp.set(FRAME.x*(1-b),-L,FRAME.z*(1-b))));camera.lookAt(look)}
+    else if(T<20){const a=seg(T,13,19);                                   // from above: the garden at the bottom of the glass
+      const from=world.localToWorld(new THREE.Vector3(0,14,.01));camera.position.copy(from).lerp(tmp.set(2.4,GY+.2,4.4),a);
+      look.copy(gc);camera.lookAt(look)}
+    else if(T<28){const a=seg(T,20,27),orb=seg(T,20,28)*.5;             // from the side: a bottle in the Norwegian Sea
+      camera.position.set(2.4,GY+.2,4.4).lerp(tmp.set(Math.sin(.75+orb)*9.5,3.2,Math.cos(.75+orb)*9.5),a);
+      look.lerp(gc,.06);camera.lookAt(look)}
+    else if(T<40){const a=seg(T,28,31),orb=.75+.5+seg(T,28,40)*1.8;     // under the surface, looking up into the garden
+      const o=tmp.set(Math.sin(orb)*6.5,THREE.MathUtils.lerp(-2.5,-7.5,seg(T,29,36)),Math.cos(orb)*6.5);
+      camera.position.lerp(o,.04+a*.1);look.lerp(gc,.05);camera.lookAt(look)}
+    else if(T<62){if(!dive.ready){dive.points.unshift(camera.position.clone());dive.ready=1}const k=seg(T,40,62);camera.position.copy(dive.getPoint(k));
+      const ahead=dive.getPoint(Math.min(k+.04,1));look.lerp(ahead.lerp(gc,seg(T,55,62)),.05);camera.lookAt(look)}
+    else{const a=seg(T,62,74);camera.position.copy(dive.getPoint(1)).lerp(tmp.set(10,13,24),a);look.lerp(tmp.set(0,1,0),.04);camera.lookAt(look)}   // far above: one tree, one small light, a large water
+    const gl=seg(T,6,12.5)*(1-seg(T,14,17.5))*.85+Math.exp(-Math.pow((T-21)*3,2))*.35+Math.exp(-Math.pow((T-26.5)*3,2))*.3+Math.exp(-Math.pow((T-28.6)*4,2))*.45;
+    grade.uniforms.glitch.value=gl*(.6+A*.8)*(Math.random()<.85?1:.25);
+    ridge.visible=T<10&&!NOGARDEN;trunkMeshes.forEach(m=>m.visible=T<10&&!NOGARDEN);if(T>16)cloud.visible=false;
+    if(T>10)drift.visible=true;{const dv=seg(T,10.5,14);driftMats.forEach(m=>m.opacity=dv);seaLight.intensity=dv*(9+A*22);drift.position.y=.25+Math.sin(t*.9)*.1;drift.rotation.x=Math.sin(t*.5)*.03}
+    // sea, sky, tanker
+    if(T>4){sea.visible=sky.visible=true;}if(T>9)spray.visible=true;
+    seaMat.uniforms.op.value=seg(T,5,14);skyMat.uniforms.op.value=seg(T,4,13);
+    sprayMat.uniforms.uT.value=T;sprayMat.uniforms.neck.value.copy(world.position);
+    world.position.set(0,seg(T,9,13)*GY+(T>11?Math.sin(t*.9)*.1:0),0);
+    drift.updateMatrixWorld(true);const attached=seg(T,13,16);world.quaternion.copy(stillRotation).slerp(drift.quaternion,attached);
+    seatWorld.copy(driftSupport);drift.localToWorld(seatWorld);seatOffset.set(0,L*SE+.008,0).applyQuaternion(world.quaternion);seatWorld.add(seatOffset);world.position.lerp(seatWorld,attached);world.updateMatrixWorld(true);
+    rootAnchorShift.set(0,-L,0).applyMatrix4(world.matrixWorld).sub(rootReference);oceanRootMat.uniforms.reveal.value=seg(T,14,20);oceanRoots.visible=T>13;
+    seaMat.uniforms.bpos.value.copy(world.position);seaMat.uniforms.bglow.value=seg(T,15,20);
+    bottleGlow.position.copy(gc);bottleGlow.material.opacity=seg(T,16,20)*(.14+A*.2);
+    const sx=THREE.MathUtils.lerp(-150,90,seg(T,12,84));tanker.position.set(sx,-.6+Math.sin(t*.4)*.15,-75);tanker.rotation.z=Math.sin(t*.35)*.012;
+    const to=seg(T,15,21)*.95;tanker.userData.mats.forEach(m=>m.uniforms.op.value=to);tanker.userData.lights.forEach((l,i)=>{l.material.opacity=Math.min(1,to*(.6+.25*Math.sin(t*(i%3?1.1:3)+i)+A*.9));l.scale.setScalar((l.userData.s||(l.userData.s=l.scale.x))*(1+A*.8))});
+    beamMat.uniforms.op.value=seg(T,21,27);const bt=tmp.copy(world.position);tanker.worldToLocal(bt);beam.lookAt(beam.position.clone().lerp(bt,seg(T,21,34)).add(new THREE.Vector3(0,-(1-seg(T,21,34))*6,(1-seg(T,21,34))*30)));
+    shipReflect.position.set(tanker.position.x-12,.05,tanker.position.z+30);shipReflect.material.opacity=to*(.08+A*.2);
+    // underwater
+    const uw=camera.position.y<0;under.visible=uw||T>27;
+    if(uw)skyMat.uniforms.op.value=0;   // 23 Nov: no sky under the water (its pale horizon showed as a white bar past the far edges of the sea and the seabed)
+    sea.renderOrder=uw?-1:10;           // 23 Nov: under the water the surface is drawn first, so it no longer cuts the golden particles and root threads off along a straight linetanker.visible=shipReflect.visible=!uw&&T>9;rays.forEach(r=>{r.lookAt(camera.position.x,r.position.y,camera.position.z);r.visible=camera.position.y<-3});
+    grade.uniforms.uw.value=uw?1:0;grade.uniforms.flash.value=Math.max(0,.12-Math.abs(camera.position.y)*.2)*(T>27?1:0);
+    if(uw){for(let i=0;i<SN;i++){let y=snowA[i*3+1]-dt*.15;if(y<-24)y=0;snowA[i*3+1]=y;
+        let x=snowA[i*3],z=snowA[i*3+2];if(x-camera.position.x>30)x-=60;if(x-camera.position.x<-30)x+=60;if(z-camera.position.z>30)z-=60;if(z-camera.position.z<-30)z+=60;snowA[i*3]=x;snowA[i*3+2]=z}
+      snowGeo.attributes.position.needsUpdate=true;
+      const fc=new THREE.Vector3(Math.sin(t*.13)*12,-10+Math.sin(t*.27)*2.5,-10+Math.cos(t*.13)*12),fv=new THREE.Vector3(Math.cos(t*.13)*12*.13,0,-Math.sin(t*.13)*12*.13).normalize();
+      const o=new THREE.Object3D();for(let i=0;i<FN;i++){const f=fishOff[i];o.position.set(fc.x+f[0]*4+Math.sin(t*f[4]+f[3])*.6,fc.y+f[1]*1.6,fc.z+f[2]*4+Math.cos(t*f[4]+f[3])*.6);
+        o.lookAt(o.position.clone().add(fv));o.updateMatrix();fish.setMatrixAt(i,o.matrix)}fish.instanceMatrix.needsUpdate=true}
+    // fog by medium
+    const c=uw?FOG_U:FOG_G.clone().lerp(FOG_S,seg(T,9,15));U.fogC.value.lerp(c,uw?.2:.05);scene.background.copy(U.fogC.value);
+    U.fogD.value=THREE.MathUtils.lerp(U.fogD.value,uw?.055:(T>9?.0085:.034),uw?.2:.04);
+    if(uw)rain.visible=false;else{rain.visible=true;updateRain(T<13?camera.position.clone().add(new THREE.Vector3(0,-5,0)):new THREE.Vector3(camera.position.x*.6,0,camera.position.z*.6),dt,T<13?15:22,T<13?15:16,T<13?1.6:1.2)}
+    if(filmTime>=filmEnd&&!said.g){said.g=1;const o=document.getElementById('outro');o.style.opacity=1;o.style.pointerEvents='auto';document.getElementById('back').classList.remove('on')}
+  }
+  if(!warming&&!(BR?.prepareOnly&&!window.__hagenStarted?.()))composer.render();requestAnimationFrame(frameLoop);
+}
+frameLoop();
+
+
+
+
+</script>
+<script id="hagen-root-cursor-script">(()=>{const e=document.createElement("div");e.id="hagen-seed-cursor";e.hidden=true;e.setAttribute("aria-hidden","true");e.innerHTML="\u003csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\"\u003e\u003cdefs\u003e\u003clinearGradient id=\"r\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"\u003e\u003cstop stop-color=\"#d6ddc9\"/\u003e\u003cstop offset=\"1\" stop-color=\"#6e8a73\" stop-opacity=\".65\"/\u003e\u003c/linearGradient\u003e\u003c/defs\u003e\u003cg fill=\"none\" stroke=\"url(#r)\" stroke-width=\"1.05\" stroke-linecap=\"round\" stroke-linejoin=\"round\"\u003e\u003cpath d=\"M16 2c-1 5 .8 8.4 0 12.2-.7 3.8 1.5 6.1.5 9.3-.4 1.7-.4 3.5-.7 5.5\"/\u003e\u003cpath d=\"M16 13.4c-2.8 1-4.5 2.7-6.3 5.5-1.1 1.7-2.8 2.8-4.6 3.8M15.8 18.3c2.8 1 4.8 2.7 6.2 5.3 1 1.8 2.8 2.8 5 3.7M15.4 23c-2-.2-3.4.6-4.5 2.4-.8 1.3-2 2-3.4 2.7M15 26c1.6-.5 2.8-.2 4 1\"/\u003e\u003c/g\u003e\u003ccircle cx=\"16\" cy=\"2.3\" r=\"1.15\" fill=\"#d6ddc9\"/\u003e\u003c/svg\u003e";document.body.append(e);})();</script></body>
+</html>

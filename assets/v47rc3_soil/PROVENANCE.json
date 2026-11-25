@@ -1,0 +1,50 @@
+﻿[
+    {
+        "asset":  "excavated_soil_wall",
+        "file":  "excavated_soil_wall/excavated_soil_wall_diff_2k.jpg",
+        "url":  "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/excavated_soil_wall/excavated_soil_wall_diff_2k.jpg",
+        "licence":  "CC0 1.0 (Poly Haven)",
+        "page":  "https://polyhaven.com/a/excavated_soil_wall",
+        "sha256":  "228effbe6848a4c95ac18030ea9a5de59a2fdd98f1ffb00ff16ac8e49920df9b"
+    },
+    {
+        "asset":  "excavated_soil_wall",
+        "file":  "excavated_soil_wall/excavated_soil_wall_nor_gl_2k.jpg",
+        "url":  "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/excavated_soil_wall/excavated_soil_wall_nor_gl_2k.jpg",
+        "licence":  "CC0 1.0 (Poly Haven)",
+        "page":  "https://polyhaven.com/a/excavated_soil_wall",
+        "sha256":  "95aec73af2943290156d352044e8d1daff40b99512948232ab46096e6d37b56d"
+    },
+    {
+        "asset":  "excavated_soil_wall",
+        "file":  "excavated_soil_wall/excavated_soil_wall_rough_2k.jpg",
+        "url":  "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/excavated_soil_wall/excavated_soil_wall_rough_2k.jpg",
+        "licence":  "CC0 1.0 (Poly Haven)",
+        "page":  "https://polyhaven.com/a/excavated_soil_wall",
+        "sha256":  "da6ce26f820e43ff41aee784868b66e4ef5febcb96437f28abbd2048fc7cfe70"
+    },
+    {
+        "asset":  "brown_mud_02",
+        "file":  "brown_mud_02/brown_mud_02_diff_2k.jpg",
+        "url":  "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brown_mud_02/brown_mud_02_diff_2k.jpg",
+        "licence":  "CC0 1.0 (Poly Haven)",
+        "page":  "https://polyhaven.com/a/brown_mud_02",
+        "sha256":  "5c735b1df784ab1990f4e209c55d27fa4e7a19508e40484ed5aa783266783726"
+    },
+    {
+        "asset":  "brown_mud_02",
+        "file":  "brown_mud_02/brown_mud_02_nor_gl_2k.jpg",
+        "url":  "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brown_mud_02/brown_mud_02_nor_gl_2k.jpg",
+        "licence":  "CC0 1.0 (Poly Haven)",
+        "page":  "https://polyhaven.com/a/brown_mud_02",
+        "sha256":  "3d6eec0adba8fd514d5634c56f806ad40206975c3ef17de1e2468b9e3ebcf719"
+    },
+    {
+        "asset":  "brown_mud_02",
+        "file":  "brown_mud_02/brown_mud_02_rough_2k.jpg",
+        "url":  "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brown_mud_02/brown_mud_02_rough_2k.jpg",
+        "licence":  "CC0 1.0 (Poly Haven)",
+        "page":  "https://polyhaven.com/a/brown_mud_02",
+        "sha256":  "00ef047ecda114930311efd31cbdb371c7a236f211a00f1dfeb6b1b73ac2f674"
+    }
+]

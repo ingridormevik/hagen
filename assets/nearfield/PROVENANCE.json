@@ -1,0 +1,81 @@
+{
+  "credits": "Original CC0 Poly Haven sources and hashes: ../forest/PROVENANCE.json",
+  "processing": "Original meshes; textures resized to at most1024 pixels, JPEG quality88",
+  "files": [
+    {
+      "path": "assets\\nearfield\\fern_02\\fern_02.bin",
+      "source": "assets\\forest\\fern_02\\fern_02.bin",
+      "sha256": "fe1abb762bcbbc7ad9e86925c8080437a62add257d9280e9142fdc85c226e64c"
+    },
+    {
+      "path": "assets\\nearfield\\fern_02\\fern_02.gltf",
+      "source": "assets\\forest\\fern_02\\fern_02.gltf",
+      "sha256": "50540d37531f93fd693d5340d5b3095c9d6d2834fa05c74bea797d54f290cb6a"
+    },
+    {
+      "path": "assets\\nearfield\\fern_02\\textures\\fern_02_arm_2k.jpg",
+      "source": "assets\\forest\\fern_02\\textures\\fern_02_arm_2k.jpg",
+      "sha256": "9f80e2320e5d90f0bacd6f248b0a4d51aa95388d38bc4f99bdd1677932a75879"
+    },
+    {
+      "path": "assets\\nearfield\\fern_02\\textures\\fern_02_diff_2k.jpg",
+      "source": "assets\\forest\\fern_02\\textures\\fern_02_diff_2k.jpg",
+      "sha256": "a9a7152008db7ef6579ccd85274308d36acbfcf12aa674bafe2642415b58941f"
+    },
+    {
+      "path": "assets\\nearfield\\fern_02\\textures\\fern_02_nor_gl_2k.jpg",
+      "source": "assets\\forest\\fern_02\\textures\\fern_02_nor_gl_2k.jpg",
+      "sha256": "35165afb16691f45ca275c7c89af693b41902102dc59981218a563f71cd0276f"
+    },
+    {
+      "path": "assets\\nearfield\\rock_moss_set_01\\rock_moss_set_01.bin",
+      "source": "assets\\forest\\rock_moss_set_01\\rock_moss_set_01.bin",
+      "sha256": "de8360e6175879aaf02c171911069cf5f1852547f9ca7f10e440085dbcc3315e"
+    },
+    {
+      "path": "assets\\nearfield\\rock_moss_set_01\\rock_moss_set_01.gltf",
+      "source": "assets\\forest\\rock_moss_set_01\\rock_moss_set_01.gltf",
+      "sha256": "794beaf2f4dc0ab155114f286049dc912a8f3287520965ca8bf6bb0d821ae3e2"
+    },
+    {
+      "path": "assets\\nearfield\\rock_moss_set_01\\textures\\rock_moss_set_01_diff_2k.jpg",
+      "source": "assets\\forest\\rock_moss_set_01\\textures\\rock_moss_set_01_diff_2k.jpg",
+      "sha256": "739eaac38434bec00d65808ad4ad1d640e693ae8c66e71bc02f1eb73ab0e11aa"
+    },
+    {
+      "path": "assets\\nearfield\\rock_moss_set_01\\textures\\rock_moss_set_01_nor_gl_2k.jpg",
+      "source": "assets\\forest\\rock_moss_set_01\\textures\\rock_moss_set_01_nor_gl_2k.jpg",
+      "sha256": "f293f8e57e170269a8395cf4d8abb0c2464870a21a9cfb310945d26eeb50e321"
+    },
+    {
+      "path": "assets\\nearfield\\rock_moss_set_01\\textures\\rock_moss_set_01_rough_2k.jpg",
+      "source": "assets\\forest\\rock_moss_set_01\\textures\\rock_moss_set_01_rough_2k.jpg",
+      "sha256": "e0feb35978751ca55eb666193767f1c04c02edee31cb0138fb869b895021e31f"
+    },
+    {
+      "path": "assets\\nearfield\\moss_01\\moss_01.bin",
+      "source": "assets\\forest\\moss_01\\moss_01.bin",
+      "sha256": "440e3cadbd93ad383cdbb9b4c17c3236774924c33ff62ac409ab00b8ed622861"
+    },
+    {
+      "path": "assets\\nearfield\\moss_01\\moss_01.gltf",
+      "source": "assets\\forest\\moss_01\\moss_01.gltf",
+      "sha256": "16c490f2d8c932d85455a6943b0a45283fb867669d6139054b2b7951d66fe13a"
+    },
+    {
+      "path": "assets\\nearfield\\moss_01\\textures\\moss_01_arm_2k.jpg",
+      "source": "assets\\forest\\moss_01\\textures\\moss_01_arm_2k.jpg",
+      "sha256": "a76425e78a1a0945258376a317e967c2647274dbf76b1c0e22fd77d8fdba6346"
+    },
+    {
+      "path": "assets\\nearfield\\moss_01\\textures\\moss_01_diff_2k.jpg",
+      "source": "assets\\forest\\moss_01\\textures\\moss_01_diff_2k.jpg",
+      "sha256": "012b194adb46e88fe0901f1545add7583b38c81cf80a0e631199345352c72f1a"
+    },
+    {
+      "path": "assets\\nearfield\\moss_01\\textures\\moss_01_nor_gl_2k.jpg",
+      "source": "assets\\forest\\moss_01\\textures\\moss_01_nor_gl_2k.jpg",
+      "sha256": "332958655a32bf5e7f356050cb6dd795e6e39929a57444e0ddfb4c27e9e6369c"
+    }
+  ]
+}
