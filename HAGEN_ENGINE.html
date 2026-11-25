@@ -28706,43 +28706,107 @@ totalEmissiveRadiance=v47c*v47e+vec3(1.,.54,.17)*v47b*.5;}
  const load=()=>{try{const a=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(a)?a.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.z)):[];}catch{return [];}};
  const save=list=>{try{localStorage.setItem(KEY,JSON.stringify(list.slice(-MAX)));}catch{}};
  const P=H.plantsV46={list:load(),meshes:new Map(),planted:0,error:null};
- // ---- shared shapes (made once) ----
- const stemGeo=new T.CylinderGeometry(.009,.016,1,6,1,true);stemGeo.translate(0,.5,0);
- const leafGeo=new T.SphereGeometry(1,8,5);leafGeo.scale(.09,.008,.03);leafGeo.translate(.09,0,0);
- const petalGeo=new T.SphereGeometry(1,10,6);petalGeo.scale(.1,.01,.038);petalGeo.translate(.1,0,0);
- const coreGeo=new T.SphereGeometry(.035,12,9);
- const moundGeo=new T.CircleGeometry(.2,20);moundGeo.rotateX(-Math.PI/2);
- const stemMat=new T.MeshBasicMaterial({color:'#5d7a52',transparent:true,opacity:.9});
- const leafMat=new T.MeshBasicMaterial({color:'#6f8f5e',transparent:true,opacity:.85,side:T.DoubleSide});
- const moundMat=new T.MeshBasicMaterial({color:'#1a120b',transparent:true,opacity:.45,depthWrite:false});
- const mats=new Map();let gt=null;
- const glowTex=()=>{if(gt)return gt;const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),gr=x.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.35,'rgba(255,255,255,.35)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(0,0,64,64);gt=new T.CanvasTexture(c);return gt;};
- function petalMat(h){const k=Math.round(h*24);if(!mats.has(k)){const c=new T.Color().setHSL(k/24,.78,.6);mats.set(k,{color:c,petal:new T.MeshBasicMaterial({color:c,transparent:true,opacity:.95,side:T.DoubleSide}),core:new T.MeshBasicMaterial({color:new T.Color().setHSL((k/24+.12)%1,.85,.6)}),glow:new T.SpriteMaterial({map:glowTex(),color:c,transparent:true,opacity:.55,depthWrite:false,blending:T.AdditiveBlending})});}return mats.get(k);}
  const hash=n=>{const s=Math.sin(n*127.1+311.7)*43758.5453;return s-Math.floor(s);};
- // what a place gives the flower
- function kind(p){const lon=Number.isFinite(p.lon)?p.lon:5.3,lat=Number.isFinite(p.lat)?p.lat:60.4;
-  return {hue:((lon+180)/360+hash(p.seed)*.06)%1,petals:5+Math.min(7,Math.floor(Math.abs(lat)/12)),height:.55+hash(p.seed+1)*.35,tilt:(hash(p.seed+2)-.5)*.25,turn:hash(p.seed+3)*6.283};}
+ const pearlTexture=rootGlowTexture();
+ const lineMaterial=new T.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.76,blending:T.AdditiveBlending,depthWrite:false});
+ const pearlMaterial=new T.PointsMaterial({map:pearlTexture,color:'#e4dcb9',size:.048,transparent:true,opacity:.85,blending:T.AdditiveBlending,depthWrite:false});
+ const threadMaterial=new T.LineBasicMaterial({color:'#a4b196',transparent:true,opacity:.48,blending:T.AdditiveBlending,depthWrite:false});
+ const signalMaterial=new T.SpriteMaterial({map:pearlTexture,color:'#e2c898',transparent:true,opacity:.78,blending:T.AdditiveBlending,depthWrite:false});
+ const bark=new T.Color('#9c8965'),sage=new T.Color('#a4b196');
+ function geometry(positions){
+  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));return geo;
+ }
  function build(p){
-  const k=kind(p),g=new T.Group();g.name='V46 planted flower';
-  const mound=new T.Mesh(moundGeo,moundMat);mound.position.y=.012;mound.renderOrder=2;g.add(mound);
-  const plant=new T.Group();plant.rotation.y=k.turn;plant.rotation.z=k.tilt;g.add(plant);
-  const stem=new T.Mesh(stemGeo,stemMat);plant.add(stem);
-  const leaves=[0,1].map(i=>{const l=new T.Mesh(leafGeo,leafMat);l.rotation.y=i*Math.PI+.4;l.rotation.z=.5;plant.add(l);return l;});
-  const head=new T.Group();plant.add(head);const m=petalMat(k.hue);
-  const petals=[];for(let i=0;i<k.petals;i++){const q=new T.Mesh(petalGeo,m.petal);q.rotation.y=i/k.petals*6.283;head.add(q);petals.push(q);}
-  const core=new T.Mesh(coreGeo,m.core);head.add(core);const glow=new T.Sprite(m.glow);glow.scale.setScalar(.6);head.add(glow);
-  return {g,plant,stem,leaves,head,petals,core,glow,k,born:performance.now()};
+  const seed=Number.isFinite(p.seed)?p.seed:Math.round(p.x*193+p.z*37);
+  const height=.55+hash(seed+1)*.35,turn=hash(seed+3)*Math.PI*2;
+  const petals=5+Math.min(7,Math.floor(Math.abs(p.lat??60.4)/12));
+  const tint=new T.Color('#d7bf9a').lerp(new T.Color().setHSL(((p.lon??5.3)+180)/360,.34,.66),.32);
+  const positions=[],colours=[],pearls=[];
+  function strand(sample,steps,color,beaded){
+   let last=sample(0);
+   for(let j=1;j<=steps;j++){
+    const pt=sample(j/steps);
+    positions.push(...last,...pt);colours.push(color.r,color.g,color.b,color.r,color.g,color.b);
+    if(beaded&&j%4===0)pearls.push(...pt);
+    last=pt;
+   }
+  }
+  const lean=.05*Math.cos(turn),stem=t=>[lean*t*t,height*t,.035*Math.sin(Math.PI*t)];
+  strand(stem,12,bark,true);
+  // Each leaf and tepal has a spine and two fine, tapered veins around an open centre.
+  function blade(base,angle,length,rise,width,curl,color){
+   const dx=Math.cos(angle),dz=Math.sin(angle);
+   for(const side of [-1,0,1])strand(t=>{
+    const along=t*length,bend=Math.sin(t*Math.PI)*width*side;
+    return [base[0]+along*dx-bend*dz,base[1]+rise*t+curl*Math.sin(Math.PI*t),base[2]+along*dz+bend*dx];
+   },12,color,side===0);
+  }
+  blade(stem(.28),turn,.19,.13,.034,.034,sage);
+  blade(stem(.51),turn+2.6,.16,.11,.028,.03,sage);
+  const g=new T.Group(),plant=new T.Group(),head=new T.Group();g.name='Visitor flower · mycelium';
+  function gather(group){
+   const geo=geometry(positions);geo.setAttribute('color',new T.Float32BufferAttribute(colours,3));
+   group.add(new T.LineSegments(geo,lineMaterial),new T.Points(geometry(pearls),pearlMaterial));
+   positions.length=colours.length=pearls.length=0;
+  }
+  gather(plant);
+  for(let i=0;i<petals;i++){
+   const angle=turn+i*2*Math.PI/petals,variation=hash(seed+11+i);
+   blade([0,0,0],angle,.12+.085*variation,.023+.022*variation,.027+.011*variation,.056,tint);
+   const radius=.036+.018*variation;
+   strand(t=>[Math.cos(angle)*radius*t,.07*t,Math.sin(angle)*radius*t],4,tint,true);
+  }
+  gather(head);head.position.set(...stem(1));plant.add(head);g.add(plant);
+  return {g,plant,head,turn,section:null,link:null,born:performance.now()};
  }
- // growth: a sprout in seconds, then slowly over days (half-way after about a day)
- function growth(p,now){const ageH=Math.max(0,(Date.now()-p.t)/36e5);return .3+.7*(1-Math.exp(-ageH/30));}
- function shape(o,p,g,now){
-  const sprout=ss(0,4.5,(now-o.born)/1000*(o.fresh?1:4)),G=growth(p)*sprout,h=o.k.height*G;
-  o.stem.scale.set(1,Math.max(.001,h),1);
-  o.leaves.forEach((l,i)=>{l.position.y=h*(.3+i*.18);l.scale.setScalar(ss(.15,.5,G));});
-  o.head.position.y=h;const open=ss(.45,.95,G);o.head.scale.setScalar(.35+.65*ss(.2,.9,G));
-  o.petals.forEach(q=>{q.rotation.z=.9-open*.75+Math.sin(now/1700+q.rotation.y)*.03;});
-  o.core.scale.setScalar(.6+.4*open);o.glow.scale.setScalar(.25+.75*open);o.glow.material.opacity=.25+.35*open;
+ function clearLink(o){
+  if(!o.link)return;
+  o.link.line.removeFromParent();o.link.line.geometry.dispose();o.link.signal.removeFromParent();o.link=null;
  }
+ function connect(o,p,chunk){
+  clearLink(o);o.section=chunk?.nodePositions||null;
+  if(!o.section?.length)return;
+  let node=null,best=Infinity;
+  for(const n of o.section){
+   const dz=n.z+chunk.offset-p.z,dist=(n.x-p.x)**2+dz*dz;
+   if(dist<best){node=n;best=dist;}
+  }
+  if(!node||best<.0001)return;
+  const dx=node.x-p.x,dz=node.z+chunk.offset-p.z,distance=Math.sqrt(best);
+  const steps=Math.max(8,Math.min(96,Math.ceil(distance*5))),points=[];
+  for(let i=0;i<=steps;i++){
+   const t=i/steps,arch=Math.sin(Math.PI*t);
+   const bend=Math.min(distance*.1,.48)*arch*Math.sin(t*8+o.turn);
+   const x=dx*t-bend*dz/distance,z=dz*t+bend*dx/distance;
+   const y=gardenWorldHeight(p.x+x,p.z+z)-o.y+.025+.05*t;
+   points.push(x,i===steps?node.y-o.y:y,z);
+  }
+  const geo=geometry(points),line=new T.Line(geo,threadMaterial),signal=new T.Sprite(signalMaterial);
+  signal.scale.setScalar(.095);o.g.add(line,signal);
+  o.link={line,signal,points:geo.attributes.position,steps};
+ }
+ function shape(o,p,now){
+  const reduced=!!H.session?.reduced,age=Math.max(0,(Date.now()-p.t)/36e5);
+  const sprout=o.fresh&&!reduced?ss(0,4.5,(now-o.born)/1000):1;
+  const size=(.3+.7*(1-Math.exp(-age/30)))*sprout;
+  o.plant.scale.setScalar(size);
+  const open=.34+.66*ss(.32,.9,size);
+  o.head.scale.set(open,1,open);
+  const link=o.link;if(!link)return;
+  const reach=o.fresh&&!reduced?ss(.15,4,(now-o.born)/1000):1;
+  const segments=Math.floor(reach*link.steps);link.line.geometry.setDrawRange(0,segments+1);
+  link.signal.visible=!reduced&&segments>0;
+  if(link.signal.visible){
+   const phase=(now/5800+o.turn/(2*Math.PI))%1;
+   const u=reach<1?segments:phase*segments,i=Math.min(link.steps-1,Math.floor(u)),f=u-i,a=link.points;
+   link.signal.position.set(a.getX(i)*(1-f)+a.getX(i+1)*f,a.getY(i)*(1-f)+a.getY(i+1)*f+.012,a.getZ(i)*(1-f)+a.getZ(i+1)*f);
+  }
+ }
+ function release(o){
+  clearLink(o);o.g.removeFromParent();
+  o.plant.traverse(obj=>obj.geometry?.dispose());
+ }
+
  function placeFrom(){const w=H.weather||{};return {place:(w.label||w.place||'').toString().slice(0,40),lat:Number.isFinite(w.lat)?Math.round(w.lat*10)/10:null,lon:Number.isFinite(w.longitude)?Math.round(w.longitude*10)/10:null};}
  // a short line that fades, in the garden's own text style
  let toast=null;
@@ -28757,7 +28821,8 @@ totalEmissiveRadiance=v47c*v47e+vec3(1.,.54,.17)*v47b*.5;}
   const p0=g.player,ahead=2.6,x=p0.x-Math.sin(p0.yaw)*ahead,z=p0.z-Math.cos(p0.yaw)*ahead;
   if(P.list.some(p=>Math.hypot(p.x-x,p.z-z)<.45))return say('Her vokser det allerede noe.','Something already grows here.'),false;
   const rec={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),x:+x.toFixed(2),z:+z.toFixed(2),t:Date.now(),seed:Math.floor(Math.random()*1e6),...placeFrom()};
-  P.list.push(rec);save(P.list);P.planted++;
+  P.list.push(rec);if(P.list.length>MAX){const old=P.list.shift(),o=P.meshes.get(old.id);if(o){release(o);P.meshes.delete(old.id);}}
+  save(P.list);P.planted++;
   let y=0;try{y=gardenWorldHeight(x,z);}catch{}
   // light rises from the spot right away
   try{for(let i=0;i<46;i++){const a=Math.random()*6.283,r=Math.random()*.22;bloomEmit(x+Math.cos(a)*r,y+.03,z+Math.sin(a)*r,Math.cos(a)*.05,.25+Math.random()*.55,Math.sin(a)*.05,1.8+Math.random()*1.6,i%3?'amber':'pearl',{size:9+Math.random()*5,alpha:.85,ring:i%9===0,delay:Math.random()*.6});}}catch(e){P.error=String(e);}
@@ -28781,16 +28846,23 @@ totalEmissiveRadiance=v47c*v47e+vec3(1.,.54,.17)*v47b*.5;}
   for(const p of P.list){
    const d=Math.hypot(p.x-g.player.x,p.z-g.player.z),near=show&&d<SEE;
    let o=P.meshes.get(p.id);
-   if(!near){if(o)o.g.visible=false;continue;}
+   if(!near){if(o){release(o);P.meshes.delete(p.id);}continue;}
    if(!o)o=mesh(p);
    if(o.g.parent!==g.scene)g.scene.add(o.g);
    o.g.visible=true;
    if(o.y===undefined||frame%120===0){try{o.y=gardenWorldHeight(p.x,p.z);}catch{o.y=0;}}
    o.g.position.set(p.x,o.y,p.z-g.origin);
-   if(d<40||frame%4===0)shape(o,p,g,now);
+   const chunk=g.chunks.get(Math.floor((4-p.z)/80));
+   if(o.section!==(chunk?.nodePositions||null)||(o.section?.length&&!o.link&&frame%120===0))connect(o,p,chunk);
+   if(d<40||frame%4===0)shape(o,p,now);
   }
  };
- H.plantsV46.forget=()=>{for(const o of P.meshes.values())o.g.removeFromParent();P.meshes.clear();P.list=[];save([]);};
+ H.plantsV46.forget=()=>{for(const o of P.meshes.values())release(o);P.meshes.clear();P.list=[];save([]);};
+ const dispose=H.dispose;H.dispose=(...args)=>{
+  for(const o of P.meshes.values())release(o);P.meshes.clear();
+  for(const mat of [lineMaterial,pearlMaterial,threadMaterial,signalMaterial])mat.dispose();pearlTexture.dispose();
+  return dispose?.(...args);
+ };
 })();
 
 // V46 one place for everything (Ingrid 18 Nov): the circle and the soil line in the top corner
