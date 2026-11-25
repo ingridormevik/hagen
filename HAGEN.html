@@ -212,7 +212,8 @@ addEventListener('DOMContentLoaded',()=>{
   // was deaf for the first minute or two in the garden. Listening itself still starts after the film, so the film's
   // own spoken lines are never taken as commands.
   if(!inputsStarted){inputsStarted=true;h.soundInput.enableMicrophone();}
-  if(!voiceWarming&&h.audio?.ready&&h.warmLocalVoice){voiceWarming=true;h.warmLocalVoice();}
+  // The model waits until the garden has finished starting, so the two heaviest jobs never overlap under the film.
+  if(!voiceWarming&&h.exhibitionAccess?.ready&&h.audio?.ready&&h.warmLocalVoice){voiceWarming=true;h.warmLocalVoice();}
   if(!filmFinished)return;
   if(!voiceStarted&&h.audio?.ready&&h.exhibitionAccess?.ready&&h.embodied.dialog.querySelector('[data-start]')){voiceStarted=true;h.startGardenVoice?.();}
  }
@@ -262,7 +263,7 @@ addEventListener('DOMContentLoaded',()=>{
   hagenEntry.quiet=quiet;filmStarted=true;requested=true;hagenEntry.requestedAt=performance.now();
   front.inert=true;front.classList.add('descending');
   filmBox.hidden=false;filmBox.focus({preventScroll:true});
-  movie.muted=quiet;movie.src='assets/intro/visitor-'+V45T.lang()+'.mp4?v=8733510'; // version tag: a browser never mixes in an older film with the same name
+  movie.muted=quiet;movie.src='assets/intro/visitor-'+V45T.lang()+'.mp4?v=20261125-voice'; // version tag: a browser never mixes in an older film with the same name
   movie.play().catch(()=>{
    if(movie.error||filmFinished)return;
    message.textContent=V45T.t('Velg Spill av for å starte filmen.','Choose Play to start the film.');
