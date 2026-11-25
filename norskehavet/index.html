@@ -392,7 +392,7 @@ const shipMat=(col)=>new THREE.ShaderMaterial({uniforms:{...U,col:{value:new THR
     gl_FragColor=vec4(fog(c,vD*(.85-audio*.25)),op*min(ghost+audio*.4,1.));}`});
 {const hull=new THREE.Shape();hull.moveTo(-20,0);hull.lineTo(18,0);hull.quadraticCurveTo(22.5,.6,23,4.2);hull.lineTo(-20.5,4.2);hull.lineTo(-20,0);
  const hg=new THREE.ExtrudeGeometry(hull,{depth:5.6,bevelEnabled:false});hg.translate(0,-1.4,-2.8);
- const red=shipMat(0x5a1410),white=shipMat(0x8f9294),dark=shipMat(0x0d0e10);
+ const red=shipMat(0x7e1a12),white=shipMat(0x8f9294),dark=shipMat(0x0d0e10);   // 26 Nov: a clearer red (was 0x5a1410, almost black at night)
  const h=new THREE.Mesh(hg,red);tanker.add(h);
  const deck=new THREE.Mesh(new THREE.BoxGeometry(36,.35,5.4),dark);deck.position.set(1,2.95,0);tanker.add(deck);
  for(let i=0;i<9;i++){const p=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,5,6),dark);p.rotation.x=Math.PI/2;p.position.set(-8+i*2.6,3.4,0);tanker.add(p)}
@@ -895,14 +895,18 @@ function frameLoop(){
     rootAnchorShift.set(0,-L,0).applyMatrix4(world.matrixWorld).sub(rootReference);oceanRootMat.uniforms.reveal.value=seg(T,14,20);oceanRoots.visible=T>13;
     seaMat.uniforms.bpos.value.copy(world.position);seaMat.uniforms.bglow.value=seg(T,15,20);
     bottleGlow.position.copy(gc);bottleGlow.material.opacity=seg(T,16,20)*(.14+A*.2);
-    const sx=THREE.MathUtils.lerp(-150,90,seg(T,12,84));tanker.position.set(sx,-.6+Math.sin(t*.4)*.15,-75);tanker.rotation.z=Math.sin(t*.35)*.012;
+    // 26 Nov: the ship comes at the end: it crosses the middle of the far view (camera rising from 62 s) at about 67 s.
+    const sx=THREE.MathUtils.lerp(-150,90,seg(T,20,95));tanker.position.set(sx,-.6+Math.sin(t*.4)*.15,-75);tanker.rotation.z=Math.sin(t*.35)*.012;
     const to=seg(T,15,21)*.95;tanker.userData.mats.forEach(m=>m.uniforms.op.value=to);tanker.userData.lights.forEach((l,i)=>{l.material.opacity=Math.min(1,to*(.6+.25*Math.sin(t*(i%3?1.1:3)+i)+A*.9));l.scale.setScalar((l.userData.s||(l.userData.s=l.scale.x))*(1+A*.8))});
     beamMat.uniforms.op.value=seg(T,21,27);const bt=tmp.copy(world.position);tanker.worldToLocal(bt);beam.lookAt(beam.position.clone().lerp(bt,seg(T,21,34)).add(new THREE.Vector3(0,-(1-seg(T,21,34))*6,(1-seg(T,21,34))*30)));
     shipReflect.position.set(tanker.position.x-12,.05,tanker.position.z+30);shipReflect.material.opacity=to*(.08+A*.2);
     // underwater
     const uw=camera.position.y<0;under.visible=uw||T>27;
     if(uw)skyMat.uniforms.op.value=0;   // 23 Nov: no sky under the water (its pale horizon showed as a white bar past the far edges of the sea and the seabed)
-    sea.renderOrder=uw?-1:10;           // 23 Nov: under the water the surface is drawn first, so it no longer cuts the golden particles and root threads off along a straight linetanker.visible=shipReflect.visible=!uw&&T>9;rays.forEach(r=>{r.lookAt(camera.position.x,r.position.y,camera.position.z);r.visible=camera.position.y<-3});
+    sea.renderOrder=uw?-1:10;           // 23 Nov: under the water the surface is drawn first, so it no longer cuts the golden particles and root threads off along a straight line
+    // 26 Nov (Ingrid: "we forgot ... the red ship that's coming in the end"): a lost line break had put the next line
+    // inside the comment above, so the ship was never shown and the light rays under water never switched on.
+    tanker.visible=shipReflect.visible=!uw&&T>9;rays.forEach(r=>{r.lookAt(camera.position.x,r.position.y,camera.position.z);r.visible=camera.position.y<-3});
     grade.uniforms.uw.value=uw?1:0;grade.uniforms.flash.value=Math.max(0,.12-Math.abs(camera.position.y)*.2)*(T>27?1:0);
     if(uw){for(let i=0;i<SN;i++){let y=snowA[i*3+1]-dt*.15;if(y<-24)y=0;snowA[i*3+1]=y;
         let x=snowA[i*3],z=snowA[i*3+2];if(x-camera.position.x>30)x-=60;if(x-camera.position.x<-30)x+=60;if(z-camera.position.z>30)z-=60;if(z-camera.position.z<-30)z+=60;snowA[i*3]=x;snowA[i*3+2]=z}

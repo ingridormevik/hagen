@@ -2700,10 +2700,13 @@ function updateGardenPlayer(g,dt){
  const p=g.player,oldX=p.x,oldZ=p.z;g.walking=false;
  if(H.session.mode!=='waiting'){
   if(g.auto){if(!H.walkGardenRoute?.(g,dt)){p.z-=g.speed*dt;p.x=lerp(p.x,gardenPath(p.z),1-Math.exp(-dt*2));}}
-  else{const k=g.keys;let f=(k.has('w')||k.has('arrowup')?1:0)-(k.has('s')||k.has('arrowdown')?1:0),s=(k.has('d')||k.has('arrowright')?1:0)-(k.has('a')||k.has('arrowleft')?1:0),length=Math.hypot(f,s);if(length){f/=length;s/=length;p.x+=(-Math.sin(p.yaw)*f+Math.cos(p.yaw)*s)*g.speed*dt;p.z+=(-Math.cos(p.yaw)*f-Math.sin(p.yaw)*s)*g.speed*dt;}}
+  // 26 Nov (Ingrid: flying felt blocked "where there's nothing in the air"). In the air the keys moved at walking
+  // speed (about 0.6 m/s seen from 20 m up) and a wall held you within 24 m of the path. Flying now moves five times
+  // faster and the wall is 45 m out. On foot nothing changes.
+  else{const k=g.keys,air=H.cinematic?.drone?5:1;let f=(k.has('w')||k.has('arrowup')?1:0)-(k.has('s')||k.has('arrowdown')?1:0),s=(k.has('d')||k.has('arrowright')?1:0)-(k.has('a')||k.has('arrowleft')?1:0),length=Math.hypot(f,s);if(length){f/=length;s/=length;p.x+=(-Math.sin(p.yaw)*f+Math.cos(p.yaw)*s)*g.speed*air*dt;p.z+=(-Math.cos(p.yaw)*f-Math.sin(p.yaw)*s)*g.speed*air*dt;}}
   // Continuous outland replaces the narrow living-garden corridor.
   if(g.archive?.realms?.phase==='active')p.x=clamp(p.x,gardenPath(p.z)-20,gardenPath(p.z)+20);
-  if(H.cinematic?.drone){const c=gardenPath(p.z);p.x=clamp(p.x,c-24,c+24);}
+  if(H.cinematic?.drone){const c=gardenPath(p.z);p.x=clamp(p.x,c-45,c+45);}
   {const built=i=>{const c=g.chunks.get(i);return !!c&&(!c.gardenGPU||['ready','failed'].includes(c.gardenGPU.phase));},a=g.activeIndex,front=4-(a+1)*80,back=4-a*80;if(p.z<oldZ&&oldZ>=front&&!built(a+1)){const room=oldZ-front;if(room<24)p.z=Math.max(front+.05,oldZ+(p.z-oldZ)*Math.max(.06,room/24));}else if(p.z>oldZ&&oldZ<=back&&!built(a-1)){const room=back-oldZ;if(room<24)p.z=Math.min(back-.05,oldZ+(p.z-oldZ)*Math.max(.06,room/24));}}
   const index=Math.floor((4-p.z)/80);if(index!==g.activeIndex&&g.chunks.has(index)&&(!g.chunks.get(index).gardenGPU||["ready","failed"].includes(g.chunks.get(index).gardenGPU.phase))){setGardenActive(g,index);queueActII('crossing',2);}
   // Surface travel continues on outland while detailed planting prepares.
@@ -10187,7 +10190,8 @@ H.walkGardenRoute=(g,dt)=>{
     embodiedSay('The root is here. Say “down” or “enter roots” when you are ready.',8);
    }}
  }else if(b.voiceDrive!==null||b.steered){
-  g.player.x-=Math.sin(b.heading)*b.speed*dt*b.direction;g.player.z-=Math.cos(b.heading)*b.speed*dt*b.direction;
+  const air=H.cinematic?.drone?5:1;  // 26 Nov: voice and controller fly five times faster too (see updateGardenPlayer)
+  g.player.x-=Math.sin(b.heading)*b.speed*dt*b.direction*air;g.player.z-=Math.cos(b.heading)*b.speed*dt*b.direction*air;
  }else{
   g.player.z-=b.speed*dt*b.direction;
   const offset=b.voiceDrive===null?b.gait.lean*3.7:0,target=gardenWorldPath(g.player.z)+offset;
