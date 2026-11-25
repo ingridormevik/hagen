@@ -206,9 +206,14 @@ addEventListener('DOMContentLoaded',()=>{
   setTimeout(()=>{front.remove();if(hagenEntry.skippedFilm)h.v46Hub?.pointToMenu?.();delete frame.contentDocument.documentElement.dataset.hagenEntrancePreview;frame.contentWindow.focus();h.garden.canvas.focus({preventScroll:true});},matchMedia('(prefers-reduced-motion:reduce)').matches?0:1150);
  }
  function startInputs(h){
-  if(!filmFinished||quiet||!requested||!h.soundInput||!h.garden||!h.embodied?.dialog)return;
+  if(quiet||!requested||!h.soundInput||!h.garden||!h.embodied?.dialog)return;
+  // 25 Nov (walkthrough): the microphone opens and the offline voice model (40 MB) loads while the film plays, so the
+  // garden understands "walk" when the visitor arrives. Before, the model only began loading after the film and voice
+  // was deaf for the first minute or two in the garden. Listening itself still starts after the film, so the film's
+  // own spoken lines are never taken as commands.
   if(!inputsStarted){inputsStarted=true;h.soundInput.enableMicrophone();}
-  if(!voiceWarming&&h.exhibitionAccess?.ready&&h.audio?.ready&&h.warmLocalVoice){voiceWarming=true;h.warmLocalVoice();}
+  if(!voiceWarming&&h.audio?.ready&&h.warmLocalVoice){voiceWarming=true;h.warmLocalVoice();}
+  if(!filmFinished)return;
   if(!voiceStarted&&h.audio?.ready&&h.exhibitionAccess?.ready&&h.embodied.dialog.querySelector('[data-start]')){voiceStarted=true;h.startGardenVoice?.();}
  }
  // Language selection is the visitor's play gesture, on every visit.
