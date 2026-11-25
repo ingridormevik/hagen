@@ -156,6 +156,10 @@ addEventListener('DOMContentLoaded',()=>{
 #visitor-film[hidden]{display:none}
 #visitor-film{position:fixed;inset:0;z-index:2147483500;background:#060807;color:#eee8d9;outline:none;transition:opacity .65s}
 #visitor-film video{width:100%;height:100%;object-fit:contain}
+/* 25 Nov (Ingrid: the film did not fill the page). A laptop browser window is wider than the film, so it now fills the
+   page edge to edge. The top stays (the closing shot points to the ring up there) and only the bottom edge is trimmed,
+   below the captions. Windows narrower than the film keep the whole picture. */
+@media (min-aspect-ratio:16/9) and (max-aspect-ratio:203/100){#visitor-film video{object-fit:cover;object-position:50% 0}}
 #visitor-film nav{position:absolute;right:3vw;bottom:max(12px,2vh);display:flex;gap:20px;opacity:0;pointer-events:none;transition:opacity .25s}
 #visitor-film.active-tools nav,#visitor-film nav:focus-within{opacity:1;pointer-events:auto}
 #visitor-film button{font:italic 500 18px/1.4 HagenReading,serif;background:#08100bc9;color:inherit;border:0;padding:4px 10px}
@@ -253,7 +257,7 @@ addEventListener('DOMContentLoaded',()=>{
   hagenEntry.quiet=quiet;filmStarted=true;requested=true;hagenEntry.requestedAt=performance.now();
   front.inert=true;front.classList.add('descending');
   filmBox.hidden=false;filmBox.focus({preventScroll:true});
-  movie.muted=quiet;movie.src='assets/intro/visitor-'+V45T.lang()+'.mp4';
+  movie.muted=quiet;movie.src='assets/intro/visitor-'+V45T.lang()+'.mp4?v=8733510'; // version tag: a browser never mixes in an older film with the same name
   movie.play().catch(()=>{
    if(movie.error||filmFinished)return;
    message.textContent=V45T.t('Velg Spill av for å starte filmen.','Choose Play to start the film.');

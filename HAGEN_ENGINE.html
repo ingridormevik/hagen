@@ -4462,6 +4462,9 @@ function saveRootHistory(){
 function rootStoryEvent(id){if(!H.experience.events[id]){H.experience.events[id]=1;saveRootHistory();}}
 function rootLine(no,en){return [no,en,'',''];}
 const ROOT_PASSAGES={
+ // 25 Nov (Ingrid): her opening words, quoted in the essay as "the opening words of Hagen", lived only in the old
+ // in-garden opening film. Since the language-choice film replaced it, they open the garden itself instead.
+ 'garden.opening':rootLine('Det finnes en hage som bare våkner om natten.\nDen har ventet lenge på at noen skulle komme.','There is a garden that only wakes at night.\nIt has waited a long time for someone to come.'),
  // 24 Nov (Ingrid's V50 brief, her minimal invitation): the first sentence is new; the rest is the arrival line as it was.
  'garden.arrive':rootLine('Du trenger ikke vite hvor disse røttene begynte. Du kan begynne hvor du vil. En rot ved soppen fører ned.','You don’t need to know where these roots began. You can begin anywhere. A root beside the mushroom leads below.'),
  'garden.listen':rootLine('Jeg stanser. Noe er fremdeles på vei.','I stop. Something is still on its way.'),
@@ -5073,7 +5076,7 @@ function renderJourney3D(world,a,c,dt){
  if(!g.feelingInstalled){H.installFeelingControls?.(g);H.installRootMusic?.(g);g.feelingInstalled=true;}
  if(H.session.mode!=='waiting'&&j.phase==='start')journeySetPhase('surface');if(H.session.mode==='waiting'&&j.phase!=='start')journeySetPhase('start');
  j.audio=a;j.age+=dt;H.drama.titleLeft=0;H.actTitle.hidden=true;updateRootEncounter(a,dt);renderGarden3D(world,a,c,dt);
- if(j.phase==='surface'&&g.archive?.realms?.phase==='garden'){updateMyceliumProximity(g,dt);queueRootPassage('garden.arrive','surface',4);j.still=g.walking?0:j.still+dt;if(j.still>14)queueRootPassage('garden.listen','surface',0);if(j.still>60)queueRootPassage('garden.stay','surface',0);}
+ if(j.phase==='surface'&&g.archive?.realms?.phase==='garden'){updateMyceliumProximity(g,dt);queueRootPassage('garden.opening','surface',7);queueRootPassage('garden.arrive','surface',4);j.still=g.walking?0:j.still+dt;if(j.still>14)queueRootPassage('garden.listen','surface',6);if(j.still>60)queueRootPassage('garden.stay','surface',6);}
  updateGuidedRoots(g);H.rootSurfacePoetry?.(dt);H.updateNarrativeBridge?.(dt);H.updateRootChapter?.(dt);updateRootNarrative(dt);if(world.frame%12===0)journeyRefreshControls(g);
 }
 H.setJourneyPhase=journeySetPhase;H.pauseRootPassage=()=>{if(H.journey.transit){H.journey.transit.paused=!H.journey.transit.paused;journeyRefreshControls(H.garden);}};
@@ -28742,7 +28745,10 @@ totalEmissiveRadiance=v47c*v47e+vec3(1.,.54,.17)*v47b*.5;}
   try{for(let i=0;i<46;i++){const a=Math.random()*6.283,r=Math.random()*.22;bloomEmit(x+Math.cos(a)*r,y+.03,z+Math.sin(a)*r,Math.cos(a)*.05,.25+Math.random()*.55,Math.sin(a)*.05,1.8+Math.random()*1.6,i%3?'amber':'pearl',{size:9+Math.random()*5,alpha:.85,ring:i%9===0,delay:Math.random()*.6});}}catch(e){P.error=String(e);}
   try{haptic?.('grow');}catch{}
   const o=mesh(rec);if(o)o.fresh=true;
-  const where=rec.place?uiText(' fra '+rec.place,' from '+rec.place):'';
+  // 25 Nov: the generic place label was stored as written ("Your location" / "Din posisjon") and read as
+  // "A seed from Your location"; it now follows the language shown, in lower case. Place names keep their capital.
+  const generic=/^(your location|din posisjon)$/i.test(rec.place||'');
+  const where=rec.place?(generic?uiText(' fra din posisjon',' from your location'):uiText(' fra '+rec.place,' from '+rec.place)):'';
   say('Et frø'+where+' ligger i jorda.\nDet vokser mens du er borte.','A seed'+where+' lies in the soil.\nIt grows while you are away.');
   return true;
  };
@@ -28800,7 +28806,10 @@ totalEmissiveRadiance=v47c*v47e+vec3(1.,.54,.17)*v47b*.5;}
  #hagen-v46-hub .keys{margin:2.6em 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 18px;font-size:16px;color:#bdb6a3}
  #hagen-v46-hub .keys dt{font-style:normal;color:#e4dcc6;white-space:nowrap}
  #hagen-v46-hub .keys dd{margin:0;font-style:italic}
- #hagen-v46-hub .close{position:absolute;top:22px;right:26px;font-size:16px!important;font-style:italic;opacity:.5!important}
+ #hagen-v46-hub .close{position:absolute;top:64px;right:26px;font-size:16px!important;font-style:italic;opacity:.5!important}
+ /* 25 Nov (Ingrid): "Close" sat on the ring beside its soil line in the upper corner. Close now shares the Norsk/English
+    row, and the ring's line rests while the sheet is open (the sheet shows the same line under the languages). */
+ body:has(#hagen-v46-hub.open) #hagen-reactivity-label{opacity:0!important}
  @media (prefers-reduced-motion:reduce){#hagen-v46-hub{transition:none}}`;
  document.head.appendChild(css);
  const T=(no,en)=>uiText(no,en);
