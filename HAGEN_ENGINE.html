@@ -10116,7 +10116,7 @@ function executeEmbodiedCommand(command){
   // 26 Nov (Ingrid: the help "should give me sufficient enough help that I know about the cinematic mode, that I know
   // about all these modes ... an opportunity to press these buttons when I'm on the controller"): the guide names every
   // mode and how the controller reaches them. The finer walking words moved to "more help". The shell stays unnamed.
-  embodiedShowHelp(command==='help'?'“Walk” · “run” · “stop” · “turn left / right” · “turn around”\n“Look left / right / behind” changes only your view.\n“Fly” · “land”: the garden from above.\n“Cinematic” (or C): the garden films itself.\n“Algorithm” · “glitch”: look beneath the living garden.\n“Enter roots” beside a root · “return” to come up.\n“Read the poems” · “next page” · “close reading”\n'+where+'\nController: Start opens the circle, where every mode is. Left stick walks, right stick looks, the trigger runs, A chooses, B goes back.\n“More help” · “hide help”':where+'\n“Faster” · “slower” · “pause” · “resume” · “straight”\n“Choose left / right” where paths meet.\n“Stay with the pattern” · “break the pattern”\n“Reduce motion” · “full motion”\n“Show text” · “hide text” · “read the poems”\nSpeak freely to nourish a plant.\n“Next page / previous page” scrolls this guide.\n“Hide help” returns to the text.');return true;
+  embodiedShowHelp(command==='help'?'“Walk” · “run” · “stop” · “turn left / right” · “turn around”\n“Look left / right / behind” changes only your view.\n“Fly” · “land”: the garden from above.\n“Cinematic” (or C): the garden films itself.\n“Algorithm” · “glitch”: look beneath the living garden.\n“Enter roots” beside a root · “return” to come up.\n“Read the poems” · “next page” · “close reading”\nStuck? “Back to the path” (or the Home key).\n'+where+'\nController: Start opens the circle, where every mode is. Left stick walks, right stick looks, the trigger runs, A chooses, B goes back.\n“More help” · “hide help”':where+'\n“Faster” · “slower” · “pause” · “resume” · “straight”\n“Choose left / right” where paths meet.\n“Stay with the pattern” · “break the pattern”\n“Reduce motion” · “full motion”\n“Show text” · “hide text” · “read the poems”\nSpeak freely to nourish a plant.\n“Next page / previous page” scrolls this guide.\n“Hide help” returns to the text.');return true;
  }else if(command==='hideHelp'){embodiedCloseHelp();b.caption.dataset.shown='false';b.captionUntil=0;}
  else return false;
  if(replies[command])embodiedSay(replies[command]);return true;
@@ -19481,7 +19481,9 @@ H.PlantMeshoptDecoder=MeshoptDecoder;
   resume:['let us continue','keep walking'],back:['take a step back'],
   turnLeft:['go left'],turnRight:['go right'],around:['turn me around'],
   follow:['take me to the roots','show me the roots','follow the route'],enterRoots:['take me underground','take me down'],
-  straight:['center','centre','center me','back to the path','unstick me'],
+  straight:['center','centre','center me'],
+  // 26 Nov evening (#34): these only turned the view; they now bring a stuck visitor back onto the path (H.unstick)
+  unstick:['back to the path','unstick me','i am stuck','get me out'],
   return:['take me up','bring me back to the garden'],
   zoomIn:['let me look closer','bring the view closer','a closer look','look more closely'],
   zoomOut:['a wider view','show me more of the garden','pull back'],zoomReset:['reset the zoom','normal zoom'],
@@ -30311,6 +30313,28 @@ totalEmissiveRadiance=v47c*v47e+vec3(1.,.54,.17)*v47b*.5;}
   const s=STEPS[remap.step];el.textContent=s?(remap.step+1)+' / '+STEPS.length+'  '+(remap.waiting?say('Fått. Slipp.','Got it. Let go.'):(en?s[3]:s[2])):'';
  }
  G.startRemap=startRemap;G.skipStep=skipStep;G.cancelRemap=cancelRemap;G.resetMap=resetMap;G.back=back;
+})();
+
+// 26 Nov evening (#34, Ingrid: "I'm getting stuck sometimes when I'm running around ... We need to have a command" and
+// "a visitor must always be able to find their way back without losing what they have grown"). "back to the path" (also
+// "unstick me", "i am stuck", "get me out") or the Home key moves the visitor sideways onto the middle of the path, at the
+// same place along it. Nothing else changes: root growth, poems, the current view (garden, Algorithm, Glitch), music and
+// history stay. It never happens by itself (standing still is part of the work).
+(()=>{
+ H.unstick=()=>{
+  const g=H.garden,j=H.journey;if(!g?.player||!j)return false;
+  if(j.phase!=='surface'||j.transit||H.cinematic?.drone||H.v47Shell?.open||H.entryCovered)return false;
+  const p=g.player,b=H.embodied;if(H.cinematic?.active)H.cinematic.stop?.('Manual control');
+  if(b){b.voiceDrive=0;b.speed=0;b.transitDrive=0;b.route=null;b.descentRequest=null;b.steered=false;}
+  g.auto=false;g.keys?.clear?.();
+  const x=gardenPath(p.z);if(!Number.isFinite(x))return false;p.x=x;
+  if(b)b.heading=b.lookYaw=p.yaw;
+  g.ensureAtPlayer?.();
+  try{embodiedSay('Back on the path.');}catch{}
+  H.unstickCount=(H.unstickCount||0)+1;return true;
+ };
+ const run=executeEmbodiedCommand;executeEmbodiedCommand=(command,...args)=>command==='unstick'?H.unstick():run(command,...args);
+ addEventListener('keydown',e=>{if(e.key!=='Home'||e.repeat||e.target?.closest?.('input,select,textarea,[contenteditable="true"]'))return;if(H.unstick())e.preventDefault();});
 })();
 
 H.tick=currentRuntime=>{
