@@ -30581,10 +30581,17 @@ window.addEventListener('pagehide',event=>{if(!event.persisted)HAGEN.dispose();}
   // preparing the scene while the visitor stands still by the shell (see prepare above)
   try{
    const T=H.threshold,step=Math.min(.1,Math.max(0,dt||.016)),cam=g?.camera?.position;
-   const by=q.get('prepareshell')!=='0'&&!!T&&!!T.near&&T.armed&&!T.running&&!E.open&&H.journey?.phase==='surface'&&!H.v46Intro?.active&&!H.entryCovered&&!!cam;
-   if(by){const moved=E.lastCam?cam.distanceTo(E.lastCam):1;E.still=moved<.02?(E.still||0)+step:0;(E.lastCam||(E.lastCam=cam.clone())).copy(cam);E.away=0;
-    if(E.still>1.5&&!E.prep)prepare();}
-   else{E.still=0;E.lastCam=null;if(E.prep&&!E.open){E.away=(E.away||0)+step;if(E.away>8)unprepare();}}
+   // (#33: preparation may begin during the approach, within 12 m of the shell, on foot; the movement test below leaves out
+   // running and flying past)
+   const w=T?.shellWorld,dShell=w&&g?.player?Math.hypot(w.x-g.player.x,w.z-g.player.z):1e9;
+   const by=q.get('prepareshell')!=='0'&&!!T&&(!!T.near||dShell<12)&&!H.cinematic?.drone&&T.armed&&!T.running&&!E.open&&H.journey?.phase==='surface'&&!H.v46Intro?.active&&!H.entryCovered&&!!cam;
+   // 26 Nov evening (#33, Ingrid: "approaching the shell into it is still have a lag"): measured, the sea scene's start-up
+   // (~8 s of work) ran during the pull when it had not been prepared: 6.1 s to the scene, a 2.1 s frozen frame. The old
+   // test (under 2 cm camera movement per frame for 1.5 s) rarely passed, so preparation seldom happened. Now: within reach
+   // of the shell for 1 s with small movement (under 6 cm per frame); kept prepared unless away for 20 s (was 8 s).
+   if(by){const moved=E.lastCam?cam.distanceTo(E.lastCam):1;E.still=moved<.06?(E.still||0)+step:0;(E.lastCam||(E.lastCam=cam.clone())).copy(cam);E.away=0;
+    if(E.still>1&&!E.prep)prepare();}
+   else{E.still=0;E.lastCam=null;if(E.prep&&!E.open){E.away=(E.away||0)+step;if(E.away>20)unprepare();}}
   }catch(e){if(!E.error)E.error=String(e);}
   try{
    if(q.get('ending')==='1'&&!E.tested&&H.exhibitionAccess?.started&&!H.entryCovered&&H.journey?.phase==='surface'&&!H.v46Intro?.active){
