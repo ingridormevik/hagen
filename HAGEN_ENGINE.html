@@ -18334,13 +18334,16 @@ H.PlantMeshoptDecoder=MeshoptDecoder;
  const query=new URLSearchParams(location.search);
  if(query.get('research')==='1'||globalThis.HAGEN_RESEARCH_DEFAULT||query.has('vr')||!globalThis.HagenSensorLayer)return;
  const KEY='hagen-sensorlag',projector=query.get('projection')==='lights';
- let enabled=false;try{const v=localStorage.getItem(KEY);if(v!==null)enabled=v==='on';}catch{}
+ // 26 Nov (Ingrid: "after video in hagen the camera readings is turned on in the leftcorner, not camera in itself").
+ // A saved choice brought the measured-signals readout back at every visit. It now always starts hidden;
+ // Garden views > See what the garden senses still shows it for the rest of that visit.
+ let enabled=false;try{localStorage.removeItem(KEY);}catch{}
  const sensor=HagenSensorLayer.create({keys:['audio bpm','bass','highs','mid band','motion / audio','stage']});
  const R=H.sensorlag={enabled,log:t=>sensor.log(t),points:0};
  const canvas=document.createElement('canvas');canvas.id='hagen-sensorlag';canvas.setAttribute('aria-hidden','true');
  canvas.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:2147482950';
  const ctx=canvas.getContext('2d'),fillText=ctx.fillText.bind(ctx);ctx.fillText=(text,...args)=>fillText(String(text).replace(/^kropper =/,'motion regions ='),...args);let installed=false,toggle=null;
- R.setEnabled=value=>{enabled=R.enabled=!!value;if(toggle)toggle.checked=enabled;try{localStorage.setItem(KEY,enabled?'on':'off');}catch{}};
+ R.setEnabled=value=>{enabled=R.enabled=!!value;if(toggle)toggle.checked=enabled;};
  let beatSerial=0,beats=[],lastAct=-2,lastCommandAt=0,micOn=false,prev=null,diff=null;
  if(H.rotnett3d)H.rotnett3d.onMemory=t=>sensor.log('minne lagt i jorda');
  const ACTS=['Kall','Vekking','Gjenkjennelse','Forvandling','Fellesskap'];
@@ -19472,6 +19475,9 @@ H.PlantMeshoptDecoder=MeshoptDecoder;
  // Keep these outside HAGEN_VOICE_PHRASES so neither help view exposes them.
  for(const phrase of ['terje','terry','terry yeah'])index.set(phrase,'callWhiteHare');
  index.set('fly','fly');index.set('land','land');
+ // 26 Nov (Ingrid: "Can you put in a voice command for the cinematic then? Just cinematic. Or cinema."). Both words are in
+ // the bundled model's vocabulary (checked in model/graph/Gr.fst). Same switch as the C key and the circle's Cinematic mode.
+ for(const phrase of ['cinematic','cinema','cinematic mode'])index.set(phrase,'cinematic');
  hagenVoiceCommand=text=>index.get(normalize(text))||null;
  let compiledGrammar;hagenVoiceGrammar=()=>compiledGrammar??=JSON.stringify([...index.keys(),...[...index.keys()].flatMap(p=>['do not '+p,"don't "+p]),'[unk]']);
  H.localVoice={language:'English',offline:true,actions:Object.keys(HAGEN_VOICE_PHRASES),phrases:index.size};
@@ -22553,11 +22559,13 @@ globalThis.HagenListeningModel={create(storage,seed,now=()=>Date.now()){
  // where the camera looks, as stopping the camera by hand already did, so the stick and voice walk the way you see.
  {const b=H.embodied,g=H.garden;if(b&&g){b.heading=b.lookYaw=g.player.yaw;b.lookPitch=g.player.pitch;b.voiceDrive=0;b.speed=0;}}
  say('Returning to the garden');return true;};
- C.voiceDiagnostics=()=>{const grammar=JSON.parse(hagenVoiceGrammar());return {fly:grammar.includes('fly'),land:grammar.includes('land'),negated:grammar.includes('do not fly'),mapped:hagenVoiceCommand('fly'),landMapped:hagenVoiceCommand('land'),negation:hagenVoiceCommand('do not fly')};};
+ C.voiceDiagnostics=()=>{const grammar=JSON.parse(hagenVoiceGrammar());return {fly:grammar.includes('fly'),land:grammar.includes('land'),negated:grammar.includes('do not fly'),mapped:hagenVoiceCommand('fly'),landMapped:hagenVoiceCommand('land'),negation:hagenVoiceCommand('do not fly'),cinematic:grammar.includes('cinematic')&&grammar.includes('cinema'),cinematicMapped:hagenVoiceCommand('cinema')};};
  const interrupts=new Set(['stop','walk','thisWay','resume','faster','slower','slowPace','normalPace','fastPace','run','back','return','follow','enterRoots','next','left','right','up','down','ahead','straight','turnLeft','turnRight','around','lookBehind','body','entrance','zoomIn','zoomOut','zoomReset']);
  const command=executeEmbodiedCommand;executeEmbodiedCommand=(...args)=>{
   if(args[0]==='fly')return C.fly();
   if(args[0]==='land')return C.land();
+  // "cinematic" / "cinema" turns cinematic mode on, and off again (as C does; not during the opening film)
+  if(args[0]==='cinematic'){if(H.entryCovered||H.session?.mode==='waiting'||H.v46Intro?.active)return false;if(C.active||H.v33RootGlide){C.stop('Stopped');return true;}return C.start();}
   if(C.drone&&['enterRoots','follow','next'].includes(args[0])){say('Say land before following a root underground.');return false;}
   if(C.drone&&(args[0]==='ahead'||args[0]==='straight'))C.lookOffset=.9;
   if(C.active&&interrupts.has(args[0]))C.stop('Manual control');return command(...args);
@@ -28939,7 +28947,7 @@ totalEmissiveRadiance=v47c*v47e+vec3(1.,.54,.17)*v47b*.5;}
   ['fly',()=>[T('Fly opp','Fly up'),T('Se hagen ovenfra. Velg igjen for å lande.','See the garden from above. Choose again to land.')],()=>{const up=(H.garden?.camera?.position?.y||0)>8;H.runManualCommand?.(up?'land':'fly');}],
   // Ingrid 23 Nov: "we need the users to be able to enter cinematic mode" (the garden's own V26 cinematic camera, which
   // until now had its button only in the hidden bar). Label wording by Claude.
-  ['film',()=>[H.cinematic?.active?T('Stopp filmmodus','Stop cinematic mode'):T('Filmmodus','Cinematic mode'),T('Hagen filmer seg selv langs stien. C, Esc eller en piltast gir deg styringen tilbake.','The garden films itself along the path. C, Esc or an arrow key gives you back control.')],()=>{const C=H.cinematic;if(C)C.active?C.stop('Stopped'):C.start();}],
+  ['film',()=>[H.cinematic?.active?T('Stopp filmmodus','Stop cinematic mode'):T('Filmmodus','Cinematic mode'),T('Hagen filmer seg selv langs stien. Si «cinematic» eller trykk C. Esc eller en piltast gir deg styringen tilbake.','The garden films itself along the path. Say “cinematic” or press C. Esc or an arrow key gives you back control.')],()=>{const C=H.cinematic;if(C)C.active?C.stop('Stopped'):C.start();}],
   ['views',()=>[T('Se under den levende hagen','Look beneath the living garden'),T('Algoritme og glitch: nettet og bruddene.','Algorithm and glitch: the net and its breaks.')],()=>bar(/Garden views|Visninger/i)?.click()],
   ['controls',()=>[T('Lyd, stemme og kamera','Sound, voice and camera'),T('Mikrofon, vær og fortelling.','Microphone, weather and narration.')],()=>bar(/^(Innstillinger|Settings|Controls|Kontroller)$/i)?.click()],
   ['quiet',()=>[T('Hagens lyd','The garden’s sound'),soundPlaying()?T('Slå av lyden.','Turn sound off.'):T('Slå på lyden.','Turn sound on.')],
