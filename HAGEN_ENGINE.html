@@ -4935,7 +4935,11 @@ function updateRootProximity(g,dt){
  const manualForward=!!(H.manualNavigation?.active&&H.embodied?.active&&!H.embodied.route&&H.embodied.speed>.05&&H.embodied.direction>0);
  const forward=manualForward||(H.embodied?.active?H.embodied.speed>.05&&H.embodied.descentRequest===nearest?.key:g.keys.has('w')||g.keys.has('arrowup')),dx=nearest?nearest.portal.x-g.player.x:0,dz=nearest?nearest.portal.z+nearest.chunk.offset-g.player.z:0,toward=(-Math.sin(g.player.yaw)*dx-Math.cos(g.player.yaw)*dz)/Math.max(.01,nearest?.distance||0);
  const approaching=!!(previous&&nearest&&previous.key===nearest.key&&nearest.distance<=previous.distance+.002);
- if(nearest&&nearest.distance<2.65&&g.walking&&forward&&toward>.65&&approaching&&s.locked!==nearest.key&&!H.audioControls.open){s.dwell+=dt;if(s.dwell>=.09){if(manualForward)H.embodied.descentRequest=nearest.key;beginRootDescent(g);}}else s.dwell=0;
+ // 26 Nov (Ingrid: when flying "you're suddenly flying into the root ... This should be voluntarily to go down"): the
+ // distance above ignored height, so moving forward high over an opening pulled the visitor down. The walk-in opening now
+ // works only on foot (not while flying or landing); on the ground nothing changes.
+ const airborne=!!(H.cinematic&&(H.cinematic.drone||H.cinematic.droneBlend>.05));
+ if(nearest&&!airborne&&nearest.distance<2.65&&g.walking&&forward&&toward>.65&&approaching&&s.locked!==nearest.key&&!H.audioControls.open){s.dwell+=dt;if(s.dwell>=.09){if(manualForward)H.embodied.descentRequest=nearest.key;beginRootDescent(g);}}else s.dwell=0;
  if(previous?.key!==nearest?.key||(previous?.distance<4.4)!==(nearest?.distance<4.4))journeyRefreshControls(g);
 }
 function startRootTransit(g,points,destination){
@@ -4949,6 +4953,7 @@ function startRootTransit(g,points,destination){
 }
 function beginRootDescent(g){
  const j=H.journey,s=g.encounter,near=s.nearest;if(j.phase!=='surface'||H.session.mode==='waiting'||!near||near.distance>=4.4)return false;
+ if(H.cinematic?.drone)return false;   // 26 Nov: never down into the roots while flying; land first (voice already says so)
  if(H.embodied?.active&&H.embodied.descentRequest!==near.key)return false;
  if(g.archive?.realms?.phase==='active')return false;
  if(near.chunk.root?.visible===false||(near.chunk.gardenGPU&&!['ready','failed'].includes(near.chunk.gardenGPU.phase)))return false;if(g.archive?.realms?.phase!=='garden')finishDigitalRealm(g);if(near.chunk.index!==g.activeIndex)setGardenActive(g,near.chunk.index);
