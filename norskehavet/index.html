@@ -116,11 +116,16 @@ const hemi=new THREE.HemisphereLight(0x9aa8b0,0x0b0d0e,.55);scene.add(hemi);
 const moon=new THREE.DirectionalLight(0xc8d4dc,1.1);moon.position.set(-30,80,20);scene.add(moon);
 const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
 const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.6,.65,1.);composer.addPass(bloom);
-const grade=new ShaderPass({uniforms:{tDiffuse:{value:null},time:{value:0},uw:{value:0},flash:{value:0},glitch:{value:0}},
+const grade=new ShaderPass({uniforms:{tDiffuse:{value:null},time:{value:0},uw:{value:0},flash:{value:0},glitch:{value:0},wet:{value:0}},
   vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-  fragmentShader:`uniform sampler2D tDiffuse;uniform float time,uw,flash,glitch;varying vec2 vUv;
+  fragmentShader:`uniform sampler2D tDiffuse;uniform float time,uw,flash,glitch,wet;varying vec2 vUv;
   float h(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
   void main(){vec2 uv=vUv;float g=glitch;float ft=floor(time*14.);
+    // 26 Nov (Ingrid's chosen suggestion, the passage through the surface): for a moment after the camera breaks the
+    // surface, water runs down the view; under the water the picture bends slightly, as light does through water.
+    float drop=0.;if(wet>.001){float sx=floor(uv.x*90.),sp=h(vec2(sx,7.)),dy=fract(uv.y*.6+time*(.25+sp*.5)+sp*7.);
+      drop=smoothstep(0.,.06,dy)*smoothstep(.35,.06,dy)*step(.8,sp)*wet;uv+=vec2(.006,.012)*drop;}
+    uv+=vec2(sin(uv.y*24.+time*1.3),cos(uv.x*21.+time*1.1))*.0022*uw;
     float band=floor(uv.y*38.);if(h(vec2(band,ft))<g*.3)uv.x+=(h(vec2(band,ft+7.))-.5)*.14*g;          // torn scanlines
     vec2 gs=vec2(26.,15.),bl=floor(uv*gs);if(h(bl+ft*.37)<g*.09)uv=(bl+.5)/gs+(uv-(bl+.5)/gs)*.35;          // compressed blocks
     vec2 d=uv-.5;float r=dot(d,d);
@@ -132,7 +137,7 @@ const grade=new ShaderPass({uniforms:{tDiffuse:{value:null},time:{value:0},uw:{v
     c+=vec3(.012,.016,.018);                       // lifted, cold blacks
     c*=1.-smoothstep(.12,.62,r)*.62;               // vignette
     c+=(h(vUv*vec2(1920.,1080.)+fract(time*7.))-.5)*.035; // grain
-    c+=flash;gl_FragColor=vec4(c,1.);}`});
+    c+=flash+vec3(.035,.045,.05)*drop;gl_FragColor=vec4(c,1.);}`});
 composer.addPass(grade);composer.addPass(new OutputPass());
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight)});
 
@@ -387,9 +392,11 @@ const sky=new THREE.Mesh(new THREE.SphereGeometry(420,48,24),skyMat);sky.visible
 const tanker=new THREE.Group();tanker.visible=false;scene.add(tanker);
 const shipMat=(col)=>new THREE.ShaderMaterial({uniforms:{...U,col:{value:new THREE.Color(col)},op:{value:0}},transparent:true,
   vertexShader:`${VS_FOG}void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  // 26 Nov (Ingrid's chosen suggestion, "not a ghost ship, a memory"): the hull no longer flickers in and out and no
+  // longer pulses with the music; it is solid, keeping only a slow breath of its own.
   fragmentShader:`${FOG}${NOISE}uniform vec3 col;uniform float op,time,audio;${VS_FOG}void main(){float s=.75+.25*fbm(vW.xy*.4+vec2(time*.05,0.));
-    float ghost=.7+.3*sin(time*.7+vW.x*.05);vec3 c=col*s*(1.+audio*1.6)+vec3(1.,.62,.28)*audio*.18*fbm(vW.xy*.8-time*.3);
-    gl_FragColor=vec4(fog(c,vD*(.85-audio*.25)),op*min(ghost+audio*.4,1.));}`});
+    float ghost=.95+.05*sin(time*.23+vW.x*.05);vec3 c=col*s;
+    gl_FragColor=vec4(fog(c,vD*.85),op*ghost);}`});
 {const hull=new THREE.Shape();hull.moveTo(-20,0);hull.lineTo(18,0);hull.quadraticCurveTo(22.5,.6,23,4.2);hull.lineTo(-20.5,4.2);hull.lineTo(-20,0);
  const hg=new THREE.ExtrudeGeometry(hull,{depth:5.6,bevelEnabled:false});hg.translate(0,-1.4,-2.8);
  const red=shipMat(0x7e1a12),white=shipMat(0x8f9294),dark=shipMat(0x0d0e10);   // 26 Nov: a clearer red (was 0x5a1410, almost black at night)
@@ -406,7 +413,9 @@ const shipMat=(col)=>new THREE.ShaderMaterial({uniforms:{...U,col:{value:new THR
  for(let i=0;i<7;i++)lights.push([-18.5+i*1,9.4,2.85,1.7,1.25,.6,.7]);for(let i=0;i<5;i++)lights.push([-18+i*1.2,6.5,2.65,1.5,1.1,.55,.6]);
  for(let i=0;i<6;i++)lights.push([-6+i*5,4.4,0,1.5,1.05,.5,1.1]);
  tanker.userData.lights=lights.map(([x,y,z,r,g,b,s])=>{const sp=glow(new THREE.Color(r,g,b),s,0);sp.position.set(x,y,z);tanker.add(sp);return sp});
- tanker.userData.mats=[red,white,dark]}
+ tanker.userData.mats=[red,white,dark];
+ // 26 Nov: a faint red light that reaches through the fog before the hull does
+ const redGlow=glow(new THREE.Color(1.5,.16,.1),14,0);redGlow.material.fog=false;redGlow.position.set(19,5,0);tanker.add(redGlow);tanker.userData.redGlow=redGlow}
 tanker.scale.setScalar(1);
 // a searchlight from the bridge, slowly finding the bottle; and the ship's light lying on the water
 const beamMat=new THREE.ShaderMaterial({uniforms:{...U,op:{value:0}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
@@ -555,6 +564,26 @@ const oceanRootMat=new THREE.ShaderMaterial({uniforms:{...U,anchorShift:{value:r
  vertexShader:`attribute float anchorWeight;uniform vec3 anchorShift;uniform float time;varying vec2 vUv;varying vec3 vN;${VS_FOG}void main(){vec3 p=position+anchorShift*anchorWeight;float free=sin(uv.x*3.14159);p.x+=sin(time*.24+uv.y)*free*.09;p.z+=cos(time*.21+uv.y)*free*.07;vec4 w=modelMatrix*vec4(p,1.);vW=w.xyz;vUv=uv;vN=normal;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
  fragmentShader:`${FOG}uniform float time,audio,reveal;varying vec2 vUv;varying vec3 vN;${VS_FOG}void main(){float pulse=pow(.5+.5*sin(vUv.x*19.-time*.65+vUv.y),10.);float light=.35+.65*abs(dot(normalize(vN),normalize(vec3(-.3,1.,.2))));vec3 c=vec3(.075,.10,.07)*light+vec3(.24,.26,.14)*pulse*(.45+audio*.35);gl_FragColor=vec4(fog(c,vD),reveal);}`});
 const oceanRoots=new THREE.Mesh(oceanRootGeo,oceanRootMat);oceanRoots.frustumCulled=false;under.add(oceanRoots);
+// 26 Nov (Ingrid's chosen suggestion, "let the roots continue under the sea"): where the root threads reach the seabed,
+// a new mycelium spreads slowly outwards, in the garden's own golden line and pulse. The garden has not gone; it has
+// found a new place to take root. Revealed with the film time (see seaMycMat.uniforms.grow in the frame loop).
+const seaMycP=[],seaMycPh=[];
+function growSea(x,z,a,steps,ph,depth){for(let i=0;i<steps;i++){const nx=x+Math.cos(a)*.45,nz=z+Math.sin(a)*.45;
+  seaMycP.push(x,seabedHeight(x,z)+.04,z,nx,seabedHeight(nx,nz)+.04,nz);seaMycPh.push(ph+i,ph+i+1);x=nx;z=nz;a+=rnd(-.45,.45);
+  if(depth<3&&Math.random()<.07)growSea(x,z,a+rnd(-1.2,1.2),steps*.6|0,ph+i,depth+1)}}
+for(let i=0;i<14;i++){const angle=i*2.39996,radius=5+(i%5)*1.3,ex=rootReference.x+Math.cos(angle)*radius,ez=rootReference.z+Math.sin(angle)*radius;
+  for(let k=0;k<3;k++)growSea(ex,ez,angle+rnd(-.9,.9),rnd(28,60)|0,0,0)}
+const seaMycGeo=new THREE.BufferGeometry();seaMycGeo.setAttribute('position',new THREE.Float32BufferAttribute(seaMycP,3));seaMycGeo.setAttribute('ph',new THREE.Float32BufferAttribute(seaMycPh,1));
+const seaMycMat=new THREE.ShaderMaterial({uniforms:{...U,grow:{value:0}},transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,
+  vertexShader:`attribute float ph;varying float vPh;${VS_FOG}void main(){vPh=ph;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vec4 mv=viewMatrix*w;vD=-mv.z;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`uniform float time,grow;varying float vPh;${VS_FOG}void main(){if(vPh>grow)discard;float edge=smoothstep(grow,grow-6.,vPh);
+    float p=pow(.5+.5*sin(vPh*.3-time*.9),10.);float a=(.08+.9*p)*edge*exp(-vD*vD*.0012);gl_FragColor=vec4(vec3(1.,.78,.44)*a,1.);}`});
+const seaMyc=new THREE.LineSegments(seaMycGeo,seaMycMat);seaMyc.frustumCulled=false;under.add(seaMyc);
+// rising air bubbles around the camera under the water
+const BN=160,bubA=new Float32Array(BN*3);for(let i=0;i<BN;i++)bubA.set([rnd(-4,4),rnd(-6,0),rnd(-4,4)],i*3);
+const bubGeo=new THREE.BufferGeometry();bubGeo.setAttribute('position',new THREE.BufferAttribute(bubA,3));
+const bubbles=new THREE.Points(bubGeo,new THREE.PointsMaterial({map:SOFT,size:.07,color:new THREE.Color(.75,.9,.92),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.55}));
+bubbles.frustumCulled=false;bubbles.visible=false;scene.add(bubbles);let wetAt=-9,wasUnder=false;const swayOff=new THREE.Vector3();
 // 23 Nov (Ingrid: "Something weird with the roots hanging down also from the log ... it got away and it was removed and it
 // got away"): the threads and the driftwood are both see-through materials, so which was drawn first changed as the camera
 // circled, and the wood (drawn second) wiped out the threads in front of it. The threads are now always drawn after the
@@ -650,6 +679,32 @@ function updateOcean(t){
   const swell=.65+.35*Math.sin(t*.31),wash=Math.pow(.5+.5*Math.sin(t*.37+.4),2);
   oceanBody.gain.setTargetAtTime(reveal*.04*swell,c,1.5);oceanShore.gain.setTargetAtTime(reveal*.02*wash,c,1.1);
 }
+// 26 Nov (Ingrid's chosen suggestion, "the ship as a memory"): the tanker is heard long before it is seen: a far, low
+// engine with a slow diesel beat, water against the hull and now and then metal creaking, all placed where the ship is
+// (an HRTF panner, positioned relative to the camera so the shared listener is never moved). The sources join
+// oceanSources/oceanNodes, so stopOcean stops them on the way back to the garden.
+const shipV=new THREE.Vector3();let shipPan=null,shipBus=null,shipNoise=null,shipCreakAt=0;
+function startShip(noise,master){
+  shipNoise=noise;shipBus=ctx.createGain();shipBus.gain.value=0;
+  shipPan=ctx.createPanner();shipPan.panningModel='HRTF';shipPan.distanceModel='inverse';shipPan.refDistance=8;shipPan.rolloffFactor=.6;shipPan.maxDistance=400;
+  shipBus.connect(shipPan).connect(master);
+  const hum=ctx.createBiquadFilter();hum.type='lowpass';hum.frequency.value=150;const humG=ctx.createGain();humG.gain.value=.12;hum.connect(humG).connect(shipBus);
+  for(const [f,d] of [[38,0],[57.2,4],[76.5,-6]]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=f;o.detune.value=d;o.connect(hum);o.start();oceanSources.push(o);oceanNodes.push(o)}
+  const lfo=ctx.createOscillator(),lfoG=ctx.createGain();lfo.frequency.value=1.7;lfoG.gain.value=.05;lfo.connect(lfoG).connect(humG.gain);lfo.start();oceanSources.push(lfo);oceanNodes.push(lfo,lfoG);
+  const wash=ctx.createBufferSource(),wf=ctx.createBiquadFilter(),wg=ctx.createGain();wash.buffer=noise;wash.loop=true;wf.type='bandpass';wf.frequency.value=480;wf.Q.value=.7;wg.gain.value=.05;
+  wash.connect(wf).connect(wg).connect(shipBus);wash.start(0,.9);oceanSources.push(wash);oceanNodes.push(wash,wf,wg,shipBus,shipPan,hum,humG);
+}
+function shipCreak(){if(!shipBus||!shipNoise)return;const s=ctx.createBufferSource(),f=ctx.createBiquadFilter(),e=ctx.createGain(),c=ctx.currentTime;
+  s.buffer=shipNoise;f.type='bandpass';f.frequency.value=rnd(260,620);f.Q.value=rnd(9,18);e.gain.setValueAtTime(0,c);e.gain.linearRampToValueAtTime(.16,c+.25);e.gain.exponentialRampToValueAtTime(.001,c+rnd(.9,1.8));
+  s.connect(f).connect(e).connect(shipBus);s.start(c,rnd(0,2));s.stop(c+2)}
+function updateShip(t){
+  if(!shipBus||!ctx)return;
+  const audible=state==='leaving'?seg(T,10,16):0;   // heard from when the sea opens, before the hull shows (15-21)
+  shipBus.gain.setTargetAtTime(audible*.9,ctx.currentTime,1.2);
+  const v=shipV.copy(tanker.position).applyMatrix4(camera.matrixWorldInverse).multiplyScalar(.25),c=ctx.currentTime;
+  if(shipPan.positionX){shipPan.positionX.setTargetAtTime(v.x,c,.1);shipPan.positionY.setTargetAtTime(v.y,c,.1);shipPan.positionZ.setTargetAtTime(v.z,c,.1)}else shipPan.setPosition(v.x,v.y,v.z);
+  if(audible>.2&&t>shipCreakAt){shipCreakAt=t+rnd(4,11);shipCreak()}
+}
 function stopOcean(){
   for(const source of oceanSources.splice(0))try{source.stop();}catch(e){}
   for(const node of oceanNodes.splice(0))try{node.disconnect();}catch(e){}
@@ -665,7 +720,7 @@ async function startAudio(){
   uwFilter=ctx.createBiquadFilter();uwFilter.type='lowpass';uwFilter.frequency.value=18000;uwFilter.connect(ctx.destination);
   const master=ctx.createGain();master.gain.value=.9;master.connect(uwFilter);
   const nb=ctx.createBuffer(1,ctx.sampleRate*3,ctx.sampleRate),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-  startOcean(nb,master);
+  startOcean(nb,master);startShip(nb,master);
   const ns=()=>{const s=ctx.createBufferSource();s.buffer=nb;s.loop=true;s.start();return s};
   const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=2600;bp.Q.value=.35;rainGain=ctx.createGain();rainGain.gain.value=rainGainLevel;ns().connect(bp).connect(rainGain).connect(master);
   const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=260;deepGain=ctx.createGain();deepGain.gain.value=0;ns().connect(lp).connect(deepGain).connect(master);
@@ -756,7 +811,7 @@ function advanceFilm(dt){
 }
 const camLocal=new THREE.Vector3(),camStart=new THREE.Vector3(),look=new THREE.Vector3(),tmp=new THREE.Vector3();
 const FOG_G=new THREE.Color(0x06080a),FOG_S=new THREE.Color(0x111619),FOG_U=new THREE.Color(0x02080a);
-window.__egg=()=>({state,T:+T.toFixed(2),filmTime:+filmTime.toFixed(2),filmEnd:+filmEnd.toFixed(2),glitch:grade.uniforms.glitch.value,fade:U.fade.value,reading:lineEl.textContent,photoVisible:frame.visible,supportFound,contactError:new THREE.Vector3(0,-L,0).applyMatrix4(world.matrixWorld).distanceTo(drift.localToWorld(driftSupport.clone())),rootVertices:oceanRootGeo.attributes.position.count,kelpInstances:kelp.count,draws:renderer.info.render.calls,triangles:renderer.info.render.triangles,shaderErrors:renderer.info.programs.filter(p=>p.diagnostics?.runnable===false).map(p=>p.diagnostics.programLog),cues:SEA_CUES.map(c=>({at:c.at,start:c.start,duration:c.duration,required:readingPlan(c.text,c.hold).total/1000}))});
+window.__egg=()=>({state,T:+T.toFixed(2),filmTime:+filmTime.toFixed(2),filmEnd:+filmEnd.toFixed(2),glitch:grade.uniforms.glitch.value,fade:U.fade.value,reading:lineEl.textContent,photoVisible:frame.visible,supportFound,contactError:new THREE.Vector3(0,-L,0).applyMatrix4(world.matrixWorld).distanceTo(drift.localToWorld(driftSupport.clone())),rootVertices:oceanRootGeo.attributes.position.count,kelpInstances:kelp.count,draws:renderer.info.render.calls,triangles:renderer.info.render.triangles,shaderErrors:renderer.info.programs.filter(p=>p.diagnostics?.runnable===false).map(p=>p.diagnostics.programLog),audio:ctx?ctx.state:null,shipGain:shipBus?+shipBus.gain.value.toFixed(3):null,wet:+grade.uniforms.wet.value.toFixed(2),bubbles:bubbles.visible,seaMyc:+seaMycMat.uniforms.grow.value.toFixed(1),camY:+camera.position.y.toFixed(2),tankerX:+tanker.position.x.toFixed(1),cues:SEA_CUES.map(c=>({at:c.at,start:c.start,duration:c.duration,required:readingPlan(c.text,c.hold).total/1000}))});
 let beginLineTimer=0;
 function begin(){
  startAudio();const i=document.getElementById('intro');i.style.opacity=0;setTimeout(()=>i.remove(),1900);idleAt=clock.elapsedTime;
@@ -828,7 +883,7 @@ function frameLoop(){
     else{const dx=FRAME.x-pos.x,dz=FRAME.z-pos.z,d=Math.hypot(dx,dz)||1;px=dx/d*2.5;pz=dz/d*2.5;py=0}
     const k=.08,P=panner;if(P.positionX){P.positionX.value+=(px-P.positionX.value)*k;P.positionY.value+=(py-P.positionY.value)*k;P.positionZ.value+=(pz-P.positionZ.value)*k}else P.setPosition(px,py,pz)}
   bloom.strength=.55+A*.4;
-  updateOcean(t);
+  updateOcean(t);updateShip(t);
 
   if(state!=='leaving'){
     const v=new THREE.Vector3((keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),0,(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0));
@@ -854,10 +909,13 @@ function frameLoop(){
     if(dist<5&&!said.b){said.b=1;say(RAIN>.05||!WXK?'A photograph lies in the rain.\nThe water has not reached the face.':'A photograph lies in the leaves.\nThe water has not reached the face.')}
     if(dist<1.9&&state==='garden'){state='leaving';T=filmTime=0;camStart.copy(world.worldToLocal(camera.position.clone()));cloud.visible=true;clearTimeout(beginLineTimer);advanceFilm(0)}
   } else {
-    advanceFilm(dt);
-    if(ctx){songGain.gain.setTargetAtTime(.95,ctx.currentTime,.8);songFilter.frequency.setTargetAtTime(9000,ctx.currentTime,1);
+    advanceFilm(dt);camera.position.sub(swayOff);swayOff.set(0,0,0);   // the current's sway is an offset for one frame only, so it never builds up
+    // 26 Nov (Ingrid's chosen suggestion, "the last scene"): after the last poem the world goes on. post = seconds since
+    // the film ended; the camera keeps drifting back, the ship sails on, the song fades while sea and rain continue.
+    const post=Math.max(0,filmTime-filmEnd);
+    if(ctx){songGain.gain.setTargetAtTime(.95*(1-.94*seg(post,0,24)),ctx.currentTime,.8);songFilter.frequency.setTargetAtTime(9000,ctx.currentTime,1);
       rainGain.gain.setTargetAtTime(camera.position.y<0?0:.11*(WXK?RAIN:1),ctx.currentTime,.6);deepGain.gain.setTargetAtTime(camera.position.y<0?.35:seg(T,11,16)*.22,ctx.currentTime,.6);
-      uwFilter.frequency.setTargetAtTime(camera.position.y<0?750:18000,ctx.currentTime,.25)}
+      uwFilter.frequency.setTargetAtTime(camera.position.y<0?750:18000,ctx.currentTime,.5)}   // 26 Nov: the sound sinks under the water more slowly (was .25)
     // the garden dissolves into light, and later grows back inside the glass
     mycMat.uniforms.boost.value=seg(T,0,3)*(1-seg(T,6,9));mycFade=1-.58*seg(T,4.5,9)*(1-seg(T,14,19));
     // (NOGARDEN: nothing of the garden before 14, then it grows back in the glass from nothing; the threads keep their fade)
@@ -880,7 +938,7 @@ function frameLoop(){
       camera.position.lerp(o,.04+a*.1);look.lerp(gc,.05);camera.lookAt(look)}
     else if(T<62){if(!dive.ready){dive.points.unshift(camera.position.clone());dive.ready=1}const k=seg(T,40,62);camera.position.copy(dive.getPoint(k));
       const ahead=dive.getPoint(Math.min(k+.04,1));look.lerp(ahead.lerp(gc,seg(T,55,62)),.05);camera.lookAt(look)}
-    else{const a=seg(T,62,74);camera.position.copy(dive.getPoint(1)).lerp(tmp.set(10,13,24),a);look.lerp(tmp.set(0,1,0),.04);camera.lookAt(look)}   // far above: one tree, one small light, a large water
+    else{const a=seg(T,62,80);camera.position.copy(dive.getPoint(1)).lerp(tmp.set(10,13,24),a).lerp(tmp.set(17,20,42),seg(post,0,45));look.lerp(tmp.set(0,1,0),.04);camera.lookAt(look)}   // far above: one tree, one small light, a large water (26 Nov: slower, and drifting further back after the end)
     const gl=seg(T,6,12.5)*(1-seg(T,14,17.5))*.85+Math.exp(-Math.pow((T-21)*3,2))*.35+Math.exp(-Math.pow((T-26.5)*3,2))*.3+Math.exp(-Math.pow((T-28.6)*4,2))*.45;
     grade.uniforms.glitch.value=gl*(.6+A*.8)*(Math.random()<.85?1:.25);
     ridge.visible=T<10&&!NOGARDEN;trunkMeshes.forEach(m=>m.visible=T<10&&!NOGARDEN);if(T>16)cloud.visible=false;
@@ -892,21 +950,30 @@ function frameLoop(){
     world.position.set(0,seg(T,9,13)*GY+(T>11?Math.sin(t*.9)*.1:0),0);
     drift.updateMatrixWorld(true);const attached=seg(T,13,16);world.quaternion.copy(stillRotation).slerp(drift.quaternion,attached);
     seatWorld.copy(driftSupport);drift.localToWorld(seatWorld);seatOffset.set(0,L*SE+.008,0).applyQuaternion(world.quaternion);seatWorld.add(seatOffset);world.position.lerp(seatWorld,attached);world.updateMatrixWorld(true);
-    rootAnchorShift.set(0,-L,0).applyMatrix4(world.matrixWorld).sub(rootReference);oceanRootMat.uniforms.reveal.value=seg(T,14,20);oceanRoots.visible=T>13;
+    rootAnchorShift.set(0,-L,0).applyMatrix4(world.matrixWorld).sub(rootReference);oceanRootMat.uniforms.reveal.value=seg(T,14,20);oceanRoots.visible=T>13;seaMycMat.uniforms.grow.value=seg(T,45,72)*70;
     seaMat.uniforms.bpos.value.copy(world.position);seaMat.uniforms.bglow.value=seg(T,15,20);
     bottleGlow.position.copy(gc);bottleGlow.material.opacity=seg(T,16,20)*(.14+A*.2);
     // 26 Nov: the ship comes at the end: it crosses the middle of the far view (camera rising from 62 s) at about 67 s.
-    const sx=THREE.MathUtils.lerp(-150,90,seg(T,20,95));tanker.position.set(sx,-.6+Math.sin(t*.4)*.15,-75);tanker.rotation.z=Math.sin(t*.35)*.012;
-    const to=seg(T,15,21)*.95;tanker.userData.mats.forEach(m=>m.uniforms.op.value=to);tanker.userData.lights.forEach((l,i)=>{l.material.opacity=Math.min(1,to*(.6+.25*Math.sin(t*(i%3?1.1:3)+i)+A*.9));l.scale.setScalar((l.userData.s||(l.userData.s=l.scale.x))*(1+A*.8))});
+    const sx=THREE.MathUtils.lerp(-150,90,seg(T,20,95))+post*1.6;tanker.position.set(sx,-.6+Math.sin(t*.4)*.15,-75-post*1.1);tanker.rotation.z=Math.sin(t*.35)*.012;   // after the end it sails on towards the horizon
+    // 26 Nov: the ship's lights keep their own slow rhythm (no longer driven by the music)
+    const to=seg(T,15,21)*.95;tanker.userData.mats.forEach(m=>m.uniforms.op.value=to);tanker.userData.lights.forEach((l,i)=>{l.material.opacity=Math.min(1,to*(.6+.25*Math.sin(t*(i%3?1.1:3)+i)));});
+    tanker.userData.redGlow.material.opacity=seg(T,11,17)*.5*(.8+.2*Math.sin(t*.6));
     beamMat.uniforms.op.value=seg(T,21,27);const bt=tmp.copy(world.position);tanker.worldToLocal(bt);beam.lookAt(beam.position.clone().lerp(bt,seg(T,21,34)).add(new THREE.Vector3(0,-(1-seg(T,21,34))*6,(1-seg(T,21,34))*30)));
     shipReflect.position.set(tanker.position.x-12,.05,tanker.position.z+30);shipReflect.material.opacity=to*(.08+A*.2);
     // underwater
     const uw=camera.position.y<0;under.visible=uw||T>27;
+    // 26 Nov: the passage through the surface: water runs down the view for a moment (both ways), bubbles rise past the
+    // camera under the water, and the current sways the camera gently.
+    if(uw!==wasUnder){wasUnder=uw;wetAt=t;}grade.uniforms.wet.value=1-seg(t-wetAt,0,2.2);
+    bubbles.visible=uw;if(uw){for(let i=0;i<BN;i++){let y=bubA[i*3+1]+dt*(.5+(i%7)*.08);if(y>0)y-=6;bubA[i*3+1]=y;}bubGeo.attributes.position.needsUpdate=true;
+      bubbles.position.set(camera.position.x,Math.min(camera.position.y+3,0),camera.position.z);swayOff.set(Math.sin(t*.37)*.18,Math.sin(t*.29)*.06,Math.cos(t*.31)*.15);camera.position.add(swayOff);}
     if(uw)skyMat.uniforms.op.value=0;   // 23 Nov: no sky under the water (its pale horizon showed as a white bar past the far edges of the sea and the seabed)
     sea.renderOrder=uw?-1:10;           // 23 Nov: under the water the surface is drawn first, so it no longer cuts the golden particles and root threads off along a straight line
     // 26 Nov (Ingrid: "we forgot ... the red ship that's coming in the end"): a lost line break had put the next line
     // inside the comment above, so the ship was never shown and the light rays under water never switched on.
     tanker.visible=shipReflect.visible=!uw&&T>9;rays.forEach(r=>{r.lookAt(camera.position.x,r.position.y,camera.position.z);r.visible=camera.position.y<-3});
+    // 26 Nov: a slight VHS flicker while the ship passes the middle of the view, like a memory from another time
+    if(tanker.visible&&to>.3){const sp=shipV.copy(tanker.position).project(camera);if(sp.z<1&&Math.abs(sp.x)<.3&&Math.abs(sp.y)<.9)grade.uniforms.glitch.value=Math.max(grade.uniforms.glitch.value,.1*(1-Math.abs(sp.x)/.3)*(Math.random()<.7?1:.3));}
     grade.uniforms.uw.value=uw?1:0;grade.uniforms.flash.value=Math.max(0,.12-Math.abs(camera.position.y)*.2)*(T>27?1:0);
     if(uw){for(let i=0;i<SN;i++){let y=snowA[i*3+1]-dt*.15;if(y<-24)y=0;snowA[i*3+1]=y;
         let x=snowA[i*3],z=snowA[i*3+2];if(x-camera.position.x>30)x-=60;if(x-camera.position.x<-30)x+=60;if(z-camera.position.z>30)z-=60;if(z-camera.position.z<-30)z+=60;snowA[i*3]=x;snowA[i*3+2]=z}
