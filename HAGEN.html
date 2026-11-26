@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="nb"><head><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><meta charset="utf-8"><link rel="icon" href="data:,"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HAGEN — Listening Garden</title>
+<html lang="nb"><head><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><meta charset="utf-8"><link rel="icon" type="image/svg+xml" href="root-cursor.svg"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HAGEN — Listening Garden</title>
 <link rel="preload" href="assets/fonts/cormorant-garamond-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 @font-face{font-family:HagenReading;src:url(assets/fonts/cormorant-garamond-latin-400-normal.woff2) format('woff2');font-display:swap}
 @font-face{font-family:Hagen;src:url(assets/fonts/cormorant-garamond-latin-400-normal.woff2) format('woff2');font-display:swap}
 @font-face{font-family:HagenTitle;src:url(assets/fonts/cormorant-garamond-latin-500-normal.woff2) format('woff2');font-display:swap}
-*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#71807777 transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030706;color:#dce5d9;font-family:Hagen,HagenReading,serif}
+*{box-sizing:border-box;scrollbar-width:none}*::-webkit-scrollbar{display:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030706;color:#dce5d9;font-family:Hagen,HagenReading,serif}
 iframe{position:fixed;inset:0;border:0;width:100%;height:100%;visibility:hidden}
 #entrance{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4vh 20px 7vh;background:radial-gradient(ellipse at 50% 33%,#112019bb,transparent 53%),radial-gradient(ellipse at 45% 105%,#18312699,transparent 55%),linear-gradient(#020705f5,#030907e8);transition:opacity 1.1s;z-index:2;text-align:center}
 #entrance.scene-ready{background:radial-gradient(ellipse at 50% 42%,#020806b8 15%,#02080652 65%,#020806a8),linear-gradient(#02080640,#02080685)}
@@ -226,13 +226,14 @@ addEventListener('DOMContentLoaded',()=>{
  // 25 Nov (Ingrid: "it takes too long when you press the button"). Online the film only began downloading on the
  // click, about 15 s before it played. The film in the likely language now loads while the title is on screen, so the
  // click starts it at once; choosing the other language swaps it. The version keeps browsers from mixing in old films.
- const FILM_VERSION='20261126-trailer';
+ const FILM_VERSION='20261126-song';
  const filmURL=l=>'assets/intro/visitor-'+l+'.mp4?v='+FILM_VERSION;
  // 26 Nov (Ingrid: "It's very long until the movie starts"): a first visit preloaded the Norwegian film, so choosing
  // English started a new download on the click (6.4 s measured online). Without a saved choice, the film in the
  // browser's own language is now the one that loads while the title is shown.
  const savedLanguage=(()=>{try{return ['hagen-sensory-v1','hagen_v260_listening:hagen-sensory-v1'].some(k=>JSON.parse(localStorage.getItem(k)||'{}').languageV45);}catch{return false;}})();
- const likelyLanguage=savedLanguage?V45T.lang():((navigator.languages||[navigator.language]).some(l=>/^(nb|nn|no)(-|_|$)/i.test(l||''))?'no':'en');
+ // (26 Nov, corrected: only the browser's first language counts; English first with Norwegian second chose Norwegian)
+ const likelyLanguage=savedLanguage?V45T.lang():(/^(nb|nn|no)(-|_|$)/i.test((navigator.languages&&navigator.languages[0])||navigator.language||'')?'no':'en');
  try{movie.preload='auto';movie.src=filmURL(likelyLanguage);movie.load();}catch{}
  hagenEntry.setLanguage=value=>V45T.set(value);
  function wakeTools(){
@@ -291,7 +292,10 @@ addEventListener('DOMContentLoaded',()=>{
    // come only when the garden had loaded, partway through the film. It is asked here, on the click, so the answer is
    // settled before the garden opens and the garden can listen from its first second. Only the permission is kept;
    // the garden opens its own microphone input as before.
-   try{navigator.mediaDevices?.getUserMedia?.({audio:true}).then(s=>{hagenEntry.microphoneAllowed=true;s.getTracks().forEach(t=>t.stop());},()=>{hagenEntry.microphoneAllowed=false;});}catch{}
+   // (26 Nov, later: Ingrid: "if you're playing music from another tab, the music gets blocked". {audio:true} asked for a
+   // call-style microphone with echo cancellation, which lets Windows lower other sound. It now asks with the garden's own
+   // settings: no echo cancellation, noise suppression or automatic gain, as the garden's microphone always has.)
+   try{navigator.mediaDevices?.getUserMedia?.({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}}).then(s=>{hagenEntry.microphoneAllowed=true;s.getTracks().forEach(t=>t.stop());},()=>{hagenEntry.microphoneAllowed=false;});}catch{}
   }
  }
  for(const choice of front.querySelectorAll('[data-start-language]'))choice.onclick=()=>go(choice.dataset.startLanguage);
@@ -299,17 +303,9 @@ addEventListener('DOMContentLoaded',()=>{
  skipFilm.onclick=()=>finishFilm(true);movie.onended=()=>finishFilm(false);
  movie.onpause=()=>{pauseFilm.textContent=V45T.t('Spill av','Play');wakeTools();};
  movie.onplay=()=>{message.textContent='';pauseFilm.textContent='Pause';wakeTools();};
- movie.addEventListener('timeupdate',()=>{
-  if(narrated||quiet||filmFinished||V45T.lang()!=='no'||movie.paused||movie.currentTime<86.35||movie.currentTime>87.35)return;
-  narrated=true;
-  const voice=window.speechSynthesis?.getVoices().find(v=>v.localService&&/^(nb|nn|no)(-|_|$)/i.test(v.lang));
-  if(!voice)return;
-  norwegianLine=new SpeechSynthesisUtterance('Trykk på ringen for språk og hjelp. Trå varsomt. Hagen lytter.');
-  norwegianLine.voice=voice;norwegianLine.lang=voice.lang;norwegianLine.volume=.64;
-  speechSynthesis.speak(norwegianLine);
- });
- movie.addEventListener('pause',()=>{if(norwegianLine&&!filmFinished)speechSynthesis.pause();});
- movie.addEventListener('play',()=>{if(norwegianLine&&speechSynthesis.paused)speechSynthesis.resume();});
+ // 26 Nov (Ingrid: "this AI talking, right before you start the garden, it needs to go. It's super creepy and uncanny";
+ // "Fjern den syntetiske opplesningen i den norske introduksjonen"): the computer voice that read the last card aloud
+ // at 86.35 s is removed. The film, its music and its words on screen are unchanged.
  movie.onerror=()=>{if(filmStarted&&!filmFinished){message.textContent=V45T.t('Filmen kunne ikke åpnes. Du kan gå rett inn i hagen.','The film could not open. You can enter the garden directly.');wakeTools();}};
  filmBox.onpointermove=wakeTools;filmBox.onpointerdown=wakeTools;
  filmBox.addEventListener('keydown',e=>{wakeTools();if(e.key==='Escape'){e.preventDefault();finishFilm(true);}});

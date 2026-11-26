@@ -219,7 +219,7 @@ const ridgeMat=new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:
     float wob=sin(vUv.y*9.+time*.6)*.004*(1.+swell*5.);float ridge=.25+.42*fbm(vec2(x*.35+wob*60.,1.7))+.12*fbm(vec2(x*1.4,4.));
     float y=vUv.y;float body=smoothstep(ridge+.004,ridge-.004,y);
     vec3 c=vec3(.004,.005,.006);float rim=exp(-abs(y-ridge)*160.)*.06;
-    float streak=pow(max(0.,1.-abs(fract(vUv.x*3.+time*.004)-.5)*40.),2.)*smoothstep(.1,.9,y)*.05*(1.+swell*3.); // a glint of glass
+    float streak=0.; // 26 Nov (ARTISTIC_DIRECTION.md: driftwood, not a glass bottle): the moving "glint of glass" on the horizon is off
     float lure=exp(-pow((vUv.x-.62)*400.,2.)-pow((y-ridge-.01)*90.,2.))*(.6+.4*sin(time*.8));                   // a far light
     vec3 col=c*body+vec3(.3,.34,.35)*rim+vec3(.6,.7,.72)*streak+vec3(1.6,1.1,.5)*lure;
     float a=max(body,0.)*.95+rim+streak+lure;gl_FragColor=vec4(fog(col,vD*.55),min(a,1.)*fade);}`});
@@ -732,7 +732,10 @@ async function startAudio(){
   const dl=ctx.createDelay();dl.delayTime.value=.43;const fb=ctx.createGain();fb.gain.value=.4;
   panner=ctx.createPanner();panner.panningModel='HRTF';panner.distanceModel='linear';panner.rolloffFactor=0;songFilter.connect(panner);panner.connect(songGain);songGain.connect(master);songGain.connect(analyser);songGain.connect(dl);dl.connect(fb).connect(dl);dl.connect(master);
   // grandfather's song: place song.mp3 next to this file. Without it, a placeholder melody plays.
-  try{const r=await fetch(EMB||location.pathname.includes('ending_v48')?'../assets/threshold/song.mp3':'assets/song.mp3');if(!r.ok)throw 0;const b=await ctx.decodeAudioData(await r.arrayBuffer());const s=ctx.createBufferSource();s.buffer=b;s.loop=true;s.connect(songFilter);const offset=BR?.songOffset?BR.songOffset+Math.max(0,(Date.now()-BR.songCapturedAt)/1000):0;s.start(0,offset%b.duration);pad.gain.value=0;fb.gain.value=.22}catch(e){placeholderSong()}
+  // 26 Nov (Ingrid: "Rett lydfilstien i Norskehavet slik at den samme originale melodien brukes både ved direkte åpning og
+  // ved inngang gjennom skjellet"): opened directly, the scene asked for assets/song.mp3 (404) and fell back to the
+  // placeholder melody. Both ways now load the same file; the music, its processing and timing are unchanged.
+  try{const r=await fetch('../assets/threshold/song.mp3');if(!r.ok)throw 0;const b=await ctx.decodeAudioData(await r.arrayBuffer());const s=ctx.createBufferSource();s.buffer=b;s.loop=true;s.connect(songFilter);const offset=BR?.songOffset?BR.songOffset+Math.max(0,(Date.now()-BR.songCapturedAt)/1000):0;s.start(0,offset%b.duration);pad.gain.value=0;fb.gain.value=.22}catch(e){placeholderSong()}
 }
 function placeholderSong(){const mel=[[7,1],[5,.5],[3,.5],[2,1],[0,1],[2,1],[3,.5],[5,.5],[7,2],[10,1],[9,.5],[7,.5],[5,1],[3,1],[2,2],[0,1],[2,1],[3,1],[2,1],[0,3]];
   const beat=60/64;let t=ctx.currentTime+.2,i=0;
@@ -897,7 +900,8 @@ function frameLoop(){
       pos.x+=sw*Math.sin(t*.8)*dt*.45;pos.z+=sw*Math.cos(t*.6)*dt*.2;
       const rr=pos.length();if(rr>R-.4){pos.setLength(R-.4);if(!touching){touching=1;ping();rumble()}edgeGlint.position.copy(pos).setLength(R*1.12).setY(1.4);edgeGlint.material.opacity=.5}else touching=0}
     edgeGlint.material.opacity*=.97;if(ctx&&state==='garden')deepGain.gain.setTargetAtTime(sw*.14,ctx.currentTime,.5);
-    if(state==='garden')glassMat.uniforms.op.value=THREE.MathUtils.smoothstep(pos.length(),R-5,R)*.06+sw*.02;
+    // 26 Nov (ARTISTIC_DIRECTION.md: the garden is on driftwood, never in a glass bottle): the bottle's glass stays at 0 here
+    // and in the film below; the bottle mesh itself was already never shown.
     walker.position.set(pos.x,.9+Math.sin(t*2)*.08,pos.z);walkerCore.position.copy(walker.position);U.light.value.set(pos.x,pos.z);
     camLocal.set(pos.x+Math.sin(t*.21)*.4,-L+8.5+Math.sin(t*.17)*.25,pos.z+7.5);
     camera.position.lerp(world.localToWorld(camLocal.clone()),state==='intro'?1:.05);
@@ -921,7 +925,7 @@ function frameLoop(){
     // (NOGARDEN: nothing of the garden before 14, then it grows back in the glass from nothing; the threads keep their fade)
     U.fade.value=NOGARDEN?(T<14?0:seg(T,14,19)):mycFade;
     groundMat.uniforms.dis.value=NOGARDEN?(T<14?1.2:1.2*(1-seg(T,14,19))):.58*seg(T,4,10)*(1-seg(T,14,19));cloudMat.uniforms.uT.value=T;
-    glassMat.uniforms.op.value=seg(T,12,17);groundMat.uniforms.rim.value=T>10?1:0;if(drift.userData.mg)drift.userData.mg.material.opacity=seg(T,12,17)*(.4+A*.6);
+    groundMat.uniforms.rim.value=T>10?1:0;if(drift.userData.mg)drift.userData.mg.material.opacity=seg(T,12,17)*(.4+A*.6);
     world.scale.setScalar(1-seg(T,9,14)*(1-SE));
     const bc=world.localToWorld(tmp.set(0,-L*.55,0)).clone(),gc=world.localToWorld(tmp.set(0,-L*.97,0)).clone();
     if(T<13){const a=seg(T,0,4),b=seg(T,4,13);
@@ -952,7 +956,7 @@ function frameLoop(){
     seatWorld.copy(driftSupport);drift.localToWorld(seatWorld);seatOffset.set(0,L*SE+.008,0).applyQuaternion(world.quaternion);seatWorld.add(seatOffset);world.position.lerp(seatWorld,attached);world.updateMatrixWorld(true);
     rootAnchorShift.set(0,-L,0).applyMatrix4(world.matrixWorld).sub(rootReference);oceanRootMat.uniforms.reveal.value=seg(T,14,20);oceanRoots.visible=T>13;seaMycMat.uniforms.grow.value=seg(T,45,72)*70;
     seaMat.uniforms.bpos.value.copy(world.position);seaMat.uniforms.bglow.value=seg(T,15,20);
-    bottleGlow.position.copy(gc);bottleGlow.material.opacity=seg(T,16,20)*(.14+A*.2);
+    bottleGlow.visible=false;   // 26 Nov (ARTISTIC_DIRECTION.md): the bottle's warm glow is off
     // 26 Nov: the ship comes at the end: it crosses the middle of the far view (camera rising from 62 s) at about 67 s.
     const sx=THREE.MathUtils.lerp(-150,90,seg(T,20,95))+post*1.6;tanker.position.set(sx,-.6+Math.sin(t*.4)*.15,-75-post*1.1);tanker.rotation.z=Math.sin(t*.35)*.012;   // after the end it sails on towards the horizon
     // 26 Nov: the ship's lights keep their own slow rhythm (no longer driven by the music)
