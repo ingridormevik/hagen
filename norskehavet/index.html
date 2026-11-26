@@ -917,7 +917,9 @@ function frameLoop(){
     // 26 Nov (Ingrid's chosen suggestion, "the last scene"): after the last poem the world goes on. post = seconds since
     // the film ended; the camera keeps drifting back, the ship sails on, the song fades while sea and rain continue.
     const post=Math.max(0,filmTime-filmEnd);
-    if(ctx){songGain.gain.setTargetAtTime(.95*(1-.94*seg(post,0,24)),ctx.currentTime,.8);songFilter.frequency.setTargetAtTime(9000,ctx.currentTime,1);
+    // (26 Nov evening, #27, Ingrid: "the music in the end of the sea scene is cut off suddenly": the song no longer fades
+    // after the last poem; it plays on as before. The camera drift and the ship sailing on stay.)
+    if(ctx){songGain.gain.setTargetAtTime(.95,ctx.currentTime,.8);songFilter.frequency.setTargetAtTime(9000,ctx.currentTime,1);
       rainGain.gain.setTargetAtTime(camera.position.y<0?0:.11*(WXK?RAIN:1),ctx.currentTime,.6);deepGain.gain.setTargetAtTime(camera.position.y<0?.35:seg(T,11,16)*.22,ctx.currentTime,.6);
       uwFilter.frequency.setTargetAtTime(camera.position.y<0?750:18000,ctx.currentTime,.5)}   // 26 Nov: the sound sinks under the water more slowly (was .25)
     // the garden dissolves into light, and later grows back inside the glass

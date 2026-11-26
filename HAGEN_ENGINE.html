@@ -25825,15 +25825,18 @@ AR.Detector.prototype.rotate2 = function (src, rotation) {
   if(!AU.ready&&!auBuild())return;const on=!!H.listeningGarden?.enabled&&H.journey?.phase==='surface'&&!S.running&&!H.v46Intro?.active;
   auSet(AU.master,on?.9:0,.8);if(!on||!obj)return;
   obj.group.getWorldPosition(tmp);auAt(AU.rushP,tmp.x,tmp.y+.3,tmp.z);
-  const breath=.75+.25*Math.sin(performance.now()/1000*.7);AU.levels.rush=.26*breath*(1-ss(4,30,d));auSet(AU.rush,AU.levels.rush,.5);
+  // 26 Nov evening (#22/#25, Ingrid: "the shell should have a little lower volume in the garden because it's overpowering" /
+  // "the sea sound keeps popping in suddenly in the garden"): the sea rush was heard up to 30 m away at up to .26. It is now
+  // quieter and only close by: up to .12, fading in from 14 m.
+  const breath=.75+.25*Math.sin(performance.now()/1000*.7);AU.levels.rush=.12*breath*(1-ss(3,14,d));auSet(AU.rush,AU.levels.rush,.5);
   // 26 Nov (Ingrid: "it should have a faint singing, very, very faint of the song that is playing inside of it ... when
   // you come closer to it, you hear it just a bit ... and when you go into it, it volumes up with the movement"): the
   // same song, from the shell's place, muffled and barely there from about 20 m, a little clearer close by; it rises
   // while the shell draws the visitor in. Norskehavet then carries on from the same point in the song (songStartedAt).
   if(d<22&&AU.buffer&&!AU.songStarted){auSongStart();AU.songStartedAt=AU.ctx.currentTime;}
-  const pulling=!!H.v47Shell?.pull,close=1-ss(2.5,20,d);
+  const pulling=!!H.v47Shell?.pull,close=1-ss(2.5,14,d);
   auAt(AU.songP,tmp.x,tmp.y+.3,tmp.z);AU.songF.frequency.setTargetAtTime(pulling?3200:350+1400*close*close,AU.ctx.currentTime,.6);
-  AU.levels.song=pulling?.6:.14*close*close;auSet(AU.song,AU.levels.song,pulling?.9:.7);
+  AU.levels.song=pulling?.6:.08*close*close;auSet(AU.song,AU.levels.song,pulling?.9:.7);
   auSet(AU.rain,0);auSet(AU.deep,0);
  }
  // During the ending.
