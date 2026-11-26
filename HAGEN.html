@@ -339,7 +339,9 @@ addEventListener('DOMContentLoaded',()=>{
  function gardenAfterFilmLoads(){
   if(engineRequested||!filmStarted||movie.currentTime<=0)return;
   const d=movie.duration,b=movie.buffered,end=b.length?b.end(b.length-1):0;
-  if(end-movie.currentTime>=15||(d>0&&end>=d-.5)||movie.currentTime>=55)loadGarden();
+  // 26 Nov evening (#32, staged start-up): measured online, the garden's downloads starved the film (it froze ~24 s at 20 s).
+  // The garden now starts once the whole film is downloaded, at the latest 40 s in (slow connections), or on "Enter now".
+  if((d>0&&end>=d-.5)||movie.currentTime>=40)loadGarden();
  }
  for(const type of ['progress','timeupdate','canplaythrough'])movie.addEventListener(type,gardenAfterFilmLoads);
  // The existing controller reader in the engine also navigates the language choices.

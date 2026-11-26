@@ -16503,7 +16503,10 @@ H.gpuTextureFiles={"assets/realm/earth_color.jpg": "assets/gpu/realm/earth_color
        if(typeof createImageBitmap!=='function'||!(image instanceof HTMLImageElement)||!image.naturalWidth||image.naturalWidth*image.naturalHeight<262144)continue;
        decoding.push(texture);texture.userData.bitmapDecode=fetch(image.currentSrc||image.src).then(r=>r.blob()).then(blob=>createImageBitmap(blob,{imageOrientation:texture.flipY?'flipY':'from-image',premultiplyAlpha:texture.premultiplyAlpha?'premultiply':'none',colorSpaceConversion:texture.colorSpace===THREE.NoColorSpace?'none':'default'})).then(bitmap=>{texture.image=bitmap;texture.flipY=false;texture.needsUpdate=true;H.bootTiming.bitmapDecodes=(H.bootTiming.bitmapDecodes||0)+1;},()=>{});
       }
-      const upload=async texture=>{if(!texture.image||texture.isRenderTargetTexture)return;renderer.initTexture(texture);if(++count%4===0)await new Promise(resolve=>setTimeout(resolve,0));};
+      // 26 Nov evening (#32, staged start-up): while the opening film covers the garden, one map per screen frame, so no
+      // upload blocks the film for long; after the film, four at a time as before.
+      const nextFrame=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
+      const upload=async texture=>{if(!texture.image||texture.isRenderTargetTexture)return;renderer.initTexture(texture);++count;if(H.entryCovered)await nextFrame();else if(count%4===0)await new Promise(resolve=>setTimeout(resolve,0));};
       for(const texture of textureSet)if(!decoding.includes(texture))await upload(texture);
       for(const texture of decoding){await texture.userData.bitmapDecode;delete texture.userData.bitmapDecode;await upload(texture);}
       H.bootTiming.textureUploads=count;H.bootTiming.uploadMs=performance.now()-uploadAt;
@@ -16511,19 +16514,21 @@ H.gpuTextureFiles={"assets/realm/earth_color.jpg": "assets/gpu/realm/earth_color
      // Compilation and texture uploads do not initialize vertex/instance buffers.
      // Prime the actual draw variants behind the threshold, in bounded batches.
      const geometryUploads=async()=>{
-      const uploadAt=performance.now(),warmLights=[];
+      const uploadAt=performance.now(),warmLights=[],nextFrame=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
       g.scene.updateMatrixWorld(true);warm.fog=g.scene.fog;warm.environment=g.scene.environment;warm.matrixWorldAutoUpdate=false;
       g.scene.traverseVisible(o=>{if(o.isLight)warmLights.push(o);});
       let count=0,maxBatch=0;
-      for(let cursor=0;cursor<objects.length;cursor+=4){
+      // (#32: behind the film one object per screen frame; after it, four per batch as before)
+      for(let cursor=0,step=4;cursor<objects.length;cursor+=step){
        if(H.disposed)break;
-       const batch=objects.slice(cursor,cursor+4),restore=[],old=renderer.getRenderTarget(),started=performance.now();
+       step=H.entryCovered?1:4;
+       const batch=objects.slice(cursor,cursor+step),restore=[],old=renderer.getRenderTarget(),started=performance.now();
        warm.children=[...warmLights,...batch];
        for(const o of batch){restore.push([o,o.visible,o.frustumCulled]);o.visible=true;o.frustumCulled=false;}
        try{renderer.setRenderTarget(target);if(H.withSurfaceLights)H.withSurfaceLights(g,()=>renderer.render(warm,g.camera));else renderer.render(warm,g.camera);}
        finally{renderer.setRenderTarget(old);for(const [o,visible,frustum]of restore){o.visible=visible;o.frustumCulled=frustum;}}
        count+=batch.length;maxBatch=Math.max(maxBatch,performance.now()-started);
-       await new Promise(resolve=>setTimeout(resolve,0));
+       await (H.entryCovered?nextFrame():new Promise(resolve=>setTimeout(resolve,0)));
       }
       warm.children.length=0;H.bootTiming.geometryUploads=count;H.bootTiming.geometryUploadMs=performance.now()-uploadAt;H.bootTiming.maxGeometryBatchMs=maxBatch;
      };
