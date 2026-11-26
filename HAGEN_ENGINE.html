@@ -30539,6 +30539,11 @@ window.addEventListener('pagehide',event=>{if(!event.persisted)HAGEN.dispose();}
   try{if(E.v45)H.v45AudioContext.resume();}catch{}E.v45=false;
   if(E.uiState){if(H.session)H.session.uiHidden=E.uiState.uiHidden;if(H.embodied)H.embodied.operatorOpen=E.uiState.operatorOpen;H.garden?.refreshControls?.();E.uiState=null;}
   if(H.threshold)H.threshold.done=true;
+  // 26 Nov (#19, Ingrid: "immediately returning from the C, you go into algorithm mode ... You should return to normal garden
+  // when you return"): the pull into the shell turns the garden to its Algorithm view, and the turn back in endPull could run
+  // while that view was still opening, so the garden stayed in Algorithm. On the way back it now leaves the view the same
+  // way "Return to living garden" does (checked again after 1.5 s in case the view was still changing).
+  const living=()=>{try{const r=H.garden?.archive?.realms;if(r&&r.phase!=='garden')H.patternAccess?.leave?.();}catch{}};living();setTimeout(living,1500);
   // The scene pauses the garden's audio contexts. If the active local voice capture did not survive that pause,
   // restore it after the garden resumes.
   setTimeout(()=>{const b=H.embodied;if(!b?.active||b.state==='preparing'||!H.audio?.ready||H.audio.kind!=='mic')return;
