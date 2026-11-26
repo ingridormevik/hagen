@@ -104,9 +104,11 @@ body:has(#hagen-patterns:not([hidden]),#hagen-traces[open]) :is(#hagen-soil-read
      performance mode. -->
 <style id="hagen-root-cursor-style">@media(hover:hover) and (pointer:fine){
 html,body,body *{cursor:url("root-cursor.svg") 16 3,auto!important}
-body[data-hagen-embodied=active],body[data-hagen-embodied=active] *{cursor:none!important}
+body[data-hagen-embodied=active][data-hagen-body-pose=on],body[data-hagen-embodied=active][data-hagen-body-pose=on] *{cursor:none!important}
 body[data-hagen-embodied=active] #hagen-body-setup,body[data-hagen-embodied=active] #hagen-body-setup *{cursor:url("root-cursor.svg") 16 3,auto!important}
-body.f-performance,body.f-performance *{cursor:none!important}}</style></head><body><script>
+body.f-performance,body.f-performance *{cursor:none!important}}</style>
+<style id="hagen-scrollbars">/* 26 Nov (Ingrid: "sometimes a scroll bar appears"): panels that scroll keep a thin bar in the garden's own colour, never the grey browser bar; the page itself never scrolls */
+html,body{overflow:hidden}*{scrollbar-width:thin;scrollbar-color:#71807777 transparent}</style></head><body><script>
 const runtime={dt:1/60,globalVars:{},objects:{},layout:{getLayer:()=>null},destroyMultiple:()=>{}};
 globalThis.HAGEN_BODY_DEFAULT=true;
 // HAGEN V24.1 REALM — MOVEMENT AND VOICE EDITION
@@ -2703,7 +2705,9 @@ function updateGardenPlayer(g,dt){
   // 26 Nov (Ingrid: flying felt blocked "where there's nothing in the air"). In the air the keys moved at walking
   // speed (about 0.6 m/s seen from 20 m up) and a wall held you within 24 m of the path. Flying now moves five times
   // faster and the wall is 45 m out. On foot nothing changes.
-  else{const k=g.keys,air=H.cinematic?.drone?5:1;let f=(k.has('w')||k.has('arrowup')?1:0)-(k.has('s')||k.has('arrowdown')?1:0),s=(k.has('d')||k.has('arrowright')?1:0)-(k.has('a')||k.has('arrowleft')?1:0),length=Math.hypot(f,s);if(length){f/=length;s/=length;p.x+=(-Math.sin(p.yaw)*f+Math.cos(p.yaw)*s)*g.speed*air*dt;p.z+=(-Math.cos(p.yaw)*f-Math.sin(p.yaw)*s)*g.speed*air*dt;}}
+  // 26 Nov (Ingrid: running in the air "started to be like a jet plane ... it's too much"): in the air the speed is
+  // five times walking but never above 7 m/s, so running while flying no longer multiplies it again.
+  else{const k=g.keys,air=H.cinematic?.drone?Math.min(5,7/Math.max(.01,g.speed||0)):1;let f=(k.has('w')||k.has('arrowup')?1:0)-(k.has('s')||k.has('arrowdown')?1:0),s=(k.has('d')||k.has('arrowright')?1:0)-(k.has('a')||k.has('arrowleft')?1:0),length=Math.hypot(f,s);if(length){f/=length;s/=length;p.x+=(-Math.sin(p.yaw)*f+Math.cos(p.yaw)*s)*g.speed*air*dt;p.z+=(-Math.cos(p.yaw)*f-Math.sin(p.yaw)*s)*g.speed*air*dt;}}
   // Continuous outland replaces the narrow living-garden corridor.
   if(g.archive?.realms?.phase==='active')p.x=clamp(p.x,gardenPath(p.z)-20,gardenPath(p.z)+20);
   if(H.cinematic?.drone){const c=gardenPath(p.z);p.x=clamp(p.x,c-45,c+45);}
@@ -9991,6 +9995,9 @@ async function prepareEmbodied({camera=true}={}){
  DREAM_PHASES[0][5]='Speak to leave a trace. The garden holds its rhythm, not your words.';
  b.lookYaw=b.heading=H.garden.player.yaw;b.lookPitch=H.garden.player.pitch;b.pace=b.resumePace=1.1;b.resumeDirection=1;b.steered=false;H.rootMirror.endless=false;H.experience.guided=false;
  H.audioControls.open=false;H.session.uiHidden=false;document.body.dataset.hagenEmbodied='active';b.dialog.close();
+ // 26 Nov (Ingrid: "cursor dissapears when entering garden"): voice also turns this mode on after the film, and the
+ // cursor was hidden with it. Now it is hidden only while the camera reads the body (the installation).
+ if(pose)document.body.dataset.hagenBodyPose='on';else delete document.body.dataset.hagenBodyPose;
  embodiedStatus('Voice ready locally. '+(pose?'Body tracking ready.':'Voice-only access is ready; camera walking is unavailable.'));
  if(!H.hasVisitorFilm)embodiedSay('Walk, or say “walk”.\nSpeak to what grows. Say “help” whenever you need.',9);return true;
 }
@@ -10190,7 +10197,7 @@ H.walkGardenRoute=(g,dt)=>{
     embodiedSay('The root is here. Say “down” or “enter roots” when you are ready.',8);
    }}
  }else if(b.voiceDrive!==null||b.steered){
-  const air=H.cinematic?.drone?5:1;  // 26 Nov: voice and controller fly five times faster too (see updateGardenPlayer)
+  const air=H.cinematic?.drone?Math.min(5,7/Math.max(.01,Math.abs(b.speed||0))):1;  // 26 Nov: voice and controller fly five times faster too, at most 7 m/s (see updateGardenPlayer)
   g.player.x-=Math.sin(b.heading)*b.speed*dt*b.direction*air;g.player.z-=Math.cos(b.heading)*b.speed*dt*b.direction*air;
  }else{
   g.player.z-=b.speed*dt*b.direction;

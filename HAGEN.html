@@ -5,7 +5,7 @@
 @font-face{font-family:HagenReading;src:url(assets/fonts/cormorant-garamond-latin-400-normal.woff2) format('woff2');font-display:swap}
 @font-face{font-family:Hagen;src:url(assets/fonts/cormorant-garamond-latin-400-normal.woff2) format('woff2');font-display:swap}
 @font-face{font-family:HagenTitle;src:url(assets/fonts/cormorant-garamond-latin-500-normal.woff2) format('woff2');font-display:swap}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030706;color:#dce5d9;font-family:Hagen,HagenReading,serif}
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#71807777 transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030706;color:#dce5d9;font-family:Hagen,HagenReading,serif}
 iframe{position:fixed;inset:0;border:0;width:100%;height:100%;visibility:hidden}
 #entrance{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4vh 20px 7vh;background:radial-gradient(ellipse at 50% 33%,#112019bb,transparent 53%),radial-gradient(ellipse at 45% 105%,#18312699,transparent 55%),linear-gradient(#020705f5,#030907e8);transition:opacity 1.1s;z-index:2;text-align:center}
 #entrance.scene-ready{background:radial-gradient(ellipse at 50% 42%,#020806b8 15%,#02080652 65%,#020806a8),linear-gradient(#02080640,#02080685)}
@@ -226,9 +226,14 @@ addEventListener('DOMContentLoaded',()=>{
  // 25 Nov (Ingrid: "it takes too long when you press the button"). Online the film only began downloading on the
  // click, about 15 s before it played. The film in the likely language now loads while the title is on screen, so the
  // click starts it at once; choosing the other language swaps it. The version keeps browsers from mixing in old films.
- const FILM_VERSION='20261126-hq';
+ const FILM_VERSION='20261126-trailer';
  const filmURL=l=>'assets/intro/visitor-'+l+'.mp4?v='+FILM_VERSION;
- try{movie.preload='auto';movie.src=filmURL(V45T.lang());movie.load();}catch{}
+ // 26 Nov (Ingrid: "It's very long until the movie starts"): a first visit preloaded the Norwegian film, so choosing
+ // English started a new download on the click (6.4 s measured online). Without a saved choice, the film in the
+ // browser's own language is now the one that loads while the title is shown.
+ const savedLanguage=(()=>{try{return ['hagen-sensory-v1','hagen_v260_listening:hagen-sensory-v1'].some(k=>JSON.parse(localStorage.getItem(k)||'{}').languageV45);}catch{return false;}})();
+ const likelyLanguage=savedLanguage?V45T.lang():((navigator.languages||[navigator.language]).some(l=>/^(nb|nn|no)(-|_|$)/i.test(l||''))?'no':'en');
+ try{movie.preload='auto';movie.src=filmURL(likelyLanguage);movie.load();}catch{}
  hagenEntry.setLanguage=value=>V45T.set(value);
  function wakeTools(){
   filmBox.classList.add('active-tools');
@@ -282,6 +287,11 @@ addEventListener('DOMContentLoaded',()=>{
     navigator.geolocation.getCurrentPosition(resolve,()=>resolve(null),{timeout:10000,maximumAge:300000,enableHighAccuracy:false});
    });
    try{window.hagenListeningContext ||= new (window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive'});window.hagenListeningContext.resume().catch(()=>{});}catch{}
+   // 26 Nov (Ingrid: "the sound reactibity needs to be instant when entering"): the browser's microphone question used to
+   // come only when the garden had loaded, partway through the film. It is asked here, on the click, so the answer is
+   // settled before the garden opens and the garden can listen from its first second. Only the permission is kept;
+   // the garden opens its own microphone input as before.
+   try{navigator.mediaDevices?.getUserMedia?.({audio:true}).then(s=>{hagenEntry.microphoneAllowed=true;s.getTracks().forEach(t=>t.stop());},()=>{hagenEntry.microphoneAllowed=false;});}catch{}
   }
  }
  for(const choice of front.querySelectorAll('[data-start-language]'))choice.onclick=()=>go(choice.dataset.startLanguage);
