@@ -1,4 +1,38 @@
 <!doctype html><html lang="en"><head><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><script>globalThis.HAGEN_PRESENCE_DISABLED=true;</script><script>
+// 27 Nov (#36, Ingrid: "fullscreen buttons shpuld work all times"): every fullscreen control in the garden asks the outer Hagen
+// page (HAGEN.html, window.hagenFullscreen), so the film, the garden, the roots, the views, Åpen II and Norskehavet share one
+// fullscreen. Before, the garden made only its own frame fullscreen: Norskehavet (placed in the outer page) then opened behind
+// it, and F did nothing on the title page, during the film or inside Norskehavet. Opened on its own, the garden uses its own page.
+function hagenFullscreenHost(){try{const p=window.parent;if(p&&p!==window&&p.hagenFullscreen&&p.document)return p.hagenFullscreen;}catch{}return null;}
+function hagenFullscreenActive(){const h=hagenFullscreenHost();return h?h.active():!!(document.fullscreenElement||document.webkitFullscreenElement);}
+function hagenToggleFullscreen(){
+ const h=hagenFullscreenHost();if(h)return h.toggle();
+ const d=document,el=d.documentElement;
+ try{
+  if(d.fullscreenElement||d.webkitFullscreenElement){const x=d.exitFullscreen||d.webkitExitFullscreen;return Promise.resolve(x&&x.call(d));}
+  const r=el.requestFullscreen||el.webkitRequestFullscreen;if(!r)return Promise.reject(new Error('Fullscreen unavailable'));
+  return Promise.resolve(r.call(el));
+ }catch(e){return Promise.reject(e);}
+}
+function hagenFullscreenDocuments(){const list=[document];try{const h=hagenFullscreenHost();if(h&&h.doc&&h.doc!==document)list.push(h.doc);}catch{}return list;}
+// A scene in its own frame (Norskehavet, Åpen II): its F key and its own fullscreen button act on the same Hagen fullscreen.
+function hagenAdoptFullscreen(frame){
+ try{
+  const w=frame.contentWindow,d=w&&w.document;if(!d||w.__hagenFullscreenAdopted)return;w.__hagenFullscreenAdopted=true;
+  const typing=t=>t?.closest?.('input:not([type=checkbox]):not([type=radio]),select,textarea,[contenteditable="true"]');
+  w.addEventListener('keydown',e=>{if((e.key==='f'||e.key==='F')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!typing(e.target)){e.preventDefault();e.stopImmediatePropagation();hagenToggleFullscreen().catch(()=>{});}},true);
+  const b=d.getElementById('fsBtn');if(!b)return;
+  w.addEventListener('click',e=>{if(e.target?.closest?.('#fsBtn')){e.preventDefault();e.stopImmediatePropagation();b.blur();hagenToggleFullscreen().catch(()=>{});}},true);
+  const docs=hagenFullscreenDocuments();
+  const paint=()=>{
+   let live=false;try{live=b.isConnected&&frame.isConnected;}catch{}
+   if(!live){for(const doc of docs){doc.removeEventListener('fullscreenchange',paint);doc.removeEventListener('webkitfullscreenchange',paint);}return;}
+   const f=hagenFullscreenActive();b.setAttribute('aria-pressed',f?'true':'false');const t=b.getAttribute(f?'data-off':'data-on');if(t)b.textContent=t;
+  };
+  w.__fsPaint=paint;for(const doc of docs){doc.addEventListener('fullscreenchange',paint);doc.addEventListener('webkitfullscreenchange',paint);}paint();
+ }catch{}
+}
+</script><script>
 (()=>{try{const prefix='hagen_v260_listening:',marker=prefix+'migrated';if(localStorage.getItem(marker))return;const keys=Array.from({length:localStorage.length},(_,i)=>localStorage.key(i)).filter(k=>k&&k.startsWith('hagen_v240:'));for(const old of keys){const key=prefix+old.slice('hagen_v240:'.length);if(localStorage.getItem(key)===null)localStorage.setItem(key,localStorage.getItem(old));}localStorage.setItem(marker,'1');}catch{}})();
 </script><script>window.addEventListener('keydown',e=>{if(e.key==='Escape'&&globalThis.HAGEN?.v47Shell?.open){/* 24 Nov: Esc always leaves the shell scene, before any other key handler can take it */HAGEN.v47Shell.close();e.preventDefault();e.stopImmediatePropagation();return;}if(e.key==='Escape'&&globalThis.HAGEN?.cinematic?.active){HAGEN.cinematic.stop('Manual control');e.preventDefault();e.stopImmediatePropagation();}},true);</script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>HAGEN — Listening Garden</title><style>@font-face{font-family:HagenReading;src:url(assets/fonts/cormorant-garamond-latin-400-normal.woff2) format('woff2');font-weight:400;font-display:swap}@font-face{font-family:HagenReading;src:url(assets/fonts/cormorant-garamond-latin-400-italic.woff2) format('woff2');font-weight:400;font-style:italic;font-display:swap}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050b15}*,*:before,*:after{box-sizing:border-box}</style><style>@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:400;font-display:block;src:url(assets/fonts/cormorant-garamond-latin-400-normal.woff2) format('woff2')}
 @font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:400;font-display:block;src:url(assets/fonts/cormorant-garamond-latin-400-italic.woff2) format('woff2')}
@@ -2407,11 +2441,9 @@ function installRestoredControls(){
   else{restore.hidden=true;hub.querySelector('summary').focus?.();}refresh();
  }
  async function toggleFullscreen(){
-  try{
-   if(document.fullscreenElement)await document.exitFullscreen();
-   else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();
-   else H.session.error=uiText('Fullskjerm støttes ikke i denne nettleseren.','Fullscreen is unavailable in this browser.');
-  }catch(error){H.session.error=error?.message||String(error);}refresh();
+  // 27 Nov (#36): the whole of Hagen goes fullscreen (see hagenToggleFullscreen at the top).
+  try{await hagenToggleFullscreen();}
+  catch(error){H.session.error=error?.message==='Fullscreen unavailable'?uiText('Fullskjerm støttes ikke i denne nettleseren.','Fullscreen is unavailable in this browser.'):(error?.message||String(error));}refresh();
  }
  function toggleMeters(){H.session.meters=!H.session.meters;H.audioControls.open=true;refresh();}
  function toggleMaterial(){material.hidden=!material.hidden;H.audioControls.open=true;refresh();}
@@ -2440,7 +2472,7 @@ function installRestoredControls(){
   }
   soundtrackNote.textContent=uiText('Sett på din egen musikk. Beveg deg med W A S D, dra for å se deg rundt.','Put on your own music. Move with W A S D, drag to look around.');
   restore.textContent=uiText('Vis kontroller','Show controls');sceneHeading.textContent=uiText('Rommet','The room');
-  fs.textContent=document.fullscreenElement?uiText('Avslutt fullskjerm','Exit fullscreen'):uiText('Fullskjerm','Fullscreen');
+  fs.textContent=hagenFullscreenActive()?uiText('Avslutt fullskjerm','Exit fullscreen'):uiText('Fullskjerm','Fullscreen');
   hide.textContent=uiText('Skjul kontroller','Hide controls');cam.textContent=session.cameraEnabled?uiText('Kamera på','Camera on'):uiText('Kamera av','Camera off');
   cam.setAttribute('aria-pressed',String(session.cameraEnabled));cam.disabled=session.mode!=='live';
   demo.textContent=uiText('Demo','Demo');demo.setAttribute('aria-pressed',String(session.mode==='demo'));exit.textContent=uiText('Stopp sensorer','Stop sensors');
@@ -2466,12 +2498,14 @@ function installRestoredControls(){
   reading.textContent=demo?uiText('Ingen målt lyd i demo.','No measured sound in demo.'):v.hz>0?Math.round(v.hz)+' Hz · '+uiText('periodisitet ','periodicity ')+v.conf.toFixed(2):uiText('Ingen stabil grunntone','No stable pitch');
   weights.textContent=uiText('Jern ','Iron ')+v.iron.toFixed(2)+' · '+uiText('tinn ','tin ')+v.tin.toFixed(2)+' · '+uiText('sølv ','silver ')+v.silver.toFixed(2);
  }
- on(document,'fullscreenchange',refresh);
+ for(const doc of hagenFullscreenDocuments())on(doc,'fullscreenchange',refresh);
  on(window,'keydown',e=>{
-  if(e.repeat||e.altKey||e.ctrlKey||e.metaKey||e.target?.closest?.('input,select,textarea,button,[contenteditable="true"]'))return;
+  if(e.repeat||e.altKey||e.ctrlKey||e.metaKey||e.target?.closest?.('input,select,textarea,[contenteditable="true"]'))return;
   const key=(e.key||'').toLowerCase();
-  if(key==='f'){e.preventDefault();toggleFullscreen();}
-  else if(key==='h'){e.preventDefault();setHidden(!H.session.uiHidden);}
+  // 27 Nov (#36): F also works right after a click, while a button still has the focus.
+  if(key==='f'){e.preventDefault();toggleFullscreen();return;}
+  if(e.target?.closest?.('button'))return;
+  if(key==='h'){e.preventDefault();setHidden(!H.session.uiHidden);}
   else if(key==='m'){e.preventDefault();setHidden(false);toggleMeters();}
   else if(key==='v'){e.preventDefault();setHidden(false);toggleMaterial();}
   else if(H.session.mode!=='waiting'&&(key==='pagedown'||key==='pageup')){e.preventDefault();advanceActII(key==='pageup'?-1:1);}
@@ -6557,7 +6591,7 @@ function openSilverEgg(g){
  const m=H.music;e.resume=[];for(const c of [m?.sound?.context,m?.context])if(c&&c.state==='running'){c.suspend().catch(()=>{});e.resume.push(c);}
  if(m?.media&&!m.media.paused){m.media.pause();e.media=m.media;}
  const wrap=document.createElement('div');wrap.style.cssText='position:fixed;inset:0;z-index:2147483200;background:#050706;opacity:0;transition:opacity .9s';
- const frame=document.createElement('iframe');frame.title='Åpen II · Sølv';frame.setAttribute('allow','fullscreen; autoplay');frame.setAttribute('allowfullscreen','');frame.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0';frame.srcdoc=SILVER_EGG_HTML;
+ const frame=document.createElement('iframe');frame.title='Åpen II · Sølv';frame.setAttribute('allow','fullscreen; autoplay');frame.setAttribute('allowfullscreen','');frame.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0';frame.addEventListener('load',()=>hagenAdoptFullscreen(frame));frame.srcdoc=SILVER_EGG_HTML;
  wrap.appendChild(frame);document.body.appendChild(wrap);e.wrap=wrap;e.frame=frame;requestAnimationFrame(()=>{wrap.style.opacity='1';});setTimeout(()=>frame.focus(),400);
 }
 function closeSilverEgg(g){
@@ -6816,7 +6850,7 @@ body[data-hagen-projection="true"] #hagen-journey button{border-width:1px;border
  panel.querySelector('[data-projector]').addEventListener('change',event=>{p.enabled=event.target.checked;refreshProjection();});
  for(const input of panel.querySelectorAll('[data-setting]'))input.addEventListener('input',()=>{p[input.dataset.setting]=input.valueAsNumber;refreshProjection();});
  panel.querySelector('[data-music-detail]').addEventListener('input',event=>{(H.musical??=createMusicalNarration()).gain=event.target.valueAsNumber;});
- panel.querySelector('[data-fullscreen]').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{}});
+ panel.querySelector('[data-fullscreen]').addEventListener('click',async()=>{try{await hagenToggleFullscreen();}catch{}});// 27 Nov (#36): all of Hagen
  const refresh=H.refreshTextControls,setLanguage=H.setTextLanguage;H.refreshTextControls=()=>{refresh?.();labels();};H.setTextLanguage=value=>{setLanguage(value);labels();};H.languageControls?.addEventListener('click',labels);labels();refreshProjection();
  const dispose=g.dispose;g.dispose=()=>{H.languageControls?.removeEventListener('click',labels);H.refreshTextControls=refresh;H.setTextLanguage=setLanguage;panel.remove();style.remove();p.panel=null;delete document.body.dataset.hagenProjection;dispose();};
 }
@@ -19531,8 +19565,10 @@ H.PlantMeshoptDecoder=MeshoptDecoder;
 (()=>{
  let prompt=null,attempt=0;
  const clear=()=>{prompt?.remove();prompt=null;};
- const active=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+ // 27 Nov (#36): the voice asks for the same fullscreen as F and the buttons (all of Hagen).
+ const active=()=>hagenFullscreenActive();
  const request=()=>{
+  const h=hagenFullscreenHost();if(h)return h.active()?Promise.resolve():h.toggle();
   const root=document.documentElement,fn=root.requestFullscreen||root.webkitRequestFullscreen;
   if(!fn)throw Error('Fullscreen unavailable');
   return fn.call(root);
@@ -19545,8 +19581,7 @@ H.PlantMeshoptDecoder=MeshoptDecoder;
   prompt.onclick=()=>{try{Promise.resolve(request()).then(clear,()=>{if(prompt)prompt.textContent='Fullscreen unavailable here — use your browser fullscreen control';});}catch{prompt.textContent='Fullscreen unavailable here — use your browser fullscreen control';}};
   document.body.append(prompt);
  }
- document.addEventListener('fullscreenchange',()=>{if(active())clear();});
- document.addEventListener('webkitfullscreenchange',()=>{if(active())clear();});
+ for(const doc of hagenFullscreenDocuments()){doc.addEventListener('fullscreenchange',()=>{if(active())clear();});doc.addEventListener('webkitfullscreenchange',()=>{if(active())clear();});}
  document.addEventListener('keydown',event=>{if(event.key==='Escape'){attempt++;clear();}});
  const closeTop=H.overlayUI?.closeTop;
  if(closeTop)H.overlayUI.closeTop=()=>{if(prompt){attempt++;clear();return true;}return closeTop();};
@@ -19555,6 +19590,7 @@ H.PlantMeshoptDecoder=MeshoptDecoder;
   if(action!=='enterFullscreen'&&action!=='exitFullscreen')return command(action);
   if(action==='exitFullscreen'){
    attempt++;clear();if(!active())return true;
+   const host=hagenFullscreenHost();if(host){try{Promise.resolve(host.toggle()).catch(()=>{});}catch{}return true;}
    const exit=document.exitFullscreen||document.webkitExitFullscreen;
    try{Promise.resolve(exit?.call(document)).catch(()=>{});}catch{}
    return true;
@@ -20507,7 +20543,7 @@ window.HagenTitleArt=()=>"<svg class=\"filaments\" viewBox=\"0 0 1000 440\" role
   drift:()=>{S.drift=!S.drift;press('drift',S.drift);save();},fit:()=>toggleBody('f-fit','fit'),grid:()=>toggleBody('f-grid','grid'),
   reset:()=>{S.fit=defFit();S.screen=[innerWidth,innerHeight];applyFit();fitStatus('');},blackout:()=>toggleBody('f-blackout','blackout'),
   performance:()=>{document.body.classList.add('f-performance');document.body.classList.remove('f-desk','f-grid','f-fit');H.embodied?.dialog?.close();H.garden?.canvas?.focus({preventScroll:true});},
-  full:()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen(),
+  full:()=>hagenToggleFullscreen().catch(()=>{}),
   settings:()=>{const d=H.embodied?.dialog;if(d&&!d.open)d.showModal();},close:()=>document.body.classList.remove('f-desk'),
   export:()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({format:'HAGEN-facade-fit',version:1,screen:S.screen,corners:S.fit,framing:S.framing,brightness:S.brightness},null,2)],{type:'application/json'}));a.download='hagen-facade-fit.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);},
   import:()=>file.click()
@@ -22552,7 +22588,7 @@ globalThis.HagenListeningModel={create(storage,seed,now=()=>Date.now()){
  function install(){
   if(button)return;const tools=document.querySelector('#hagen-bar .tools');if(!tools)return;
   button=document.createElement('button');button.type='button';button.textContent='Cinematic mode';button.setAttribute('aria-pressed','false');
-  button.title='Slow automatic surface journey; press Escape or use the controls to stop';button.onclick=()=>C.active?C.stop('Stopped'):C.start();tools.prepend(button);
+  button.title='Slow automatic surface journey; press Escape or use the controls to stop';button.onclick=()=>(C.active||H.v33RootGlide)?C.stop('Stopped'):C.start();tools.prepend(button);
   flyButton=document.createElement('button');flyButton.type='button';flyButton.textContent='Fly';flyButton.setAttribute('aria-pressed','false');flyButton.title='Rise into an aerial view above the surface garden';flyButton.onclick=()=>{H.gardenPause?.setPaused(false);C.fly();};
   landButton=document.createElement('button');landButton.type='button';landButton.textContent='Land';landButton.title='Land smoothly in the garden';landButton.disabled=true;landButton.onclick=()=>{H.gardenPause?.setPaused(false);C.land();};tools.append(flyButton,landButton);
   status=document.createElement('span');status.id='hagen-cinematic-status';status.setAttribute('role','status');status.style.cssText="position:fixed;right:18px;top:18px;z-index:2147482990;color:#e5e9dd;background:#071419dd;padding:8px 12px;font:16px 'Cormorant Garamond',HagenReading,serif;pointer-events:none;max-width:22em";status.hidden=true;document.body.appendChild(status);
@@ -23807,18 +23843,30 @@ gl_PointSize=clamp((1.1+level*.9+pulse*1.6)*30./max(1.,d),1.,6.);gl_Position=pro
 // passage), and the far end of the tunnel dissolves into dark rather than a lit wall.
 (()=>{
  const C=H.cinematic;
+ // 27 Nov (#37, Ingrid: "cinematic mode doesnt work under ground with the roots"): in an ordinary visit the voice/body control
+ // sets the walking speed every frame from its own drive, so the glide's g.speed was overwritten at once and nothing moved.
+ // The glide now sets its pace the way "walk" does (voiceDrive), at the surface cinematic's slow pace (0.42; reduced motion
+ // 0.24), and goes along the root's own passage as walking does. Any other movement (a voice command, the keys) takes over
+ // from it, as on the surface; C, "cinematic"/"cinema" and the circle's Cinematic mode turn it on and off.
+ let glidePace=0;
  if(C){
   const start=C.start,stop=C.stop;
   C.start=(...args)=>{
    const g=H.garden;
-   if(H.journey?.phase==='roots'&&g){g.auto=true;g.speed=1.1;g.walking=true;H.v33RootGlide=true;return true;}
+   if(H.journey?.phase==='roots'&&g){
+    const b=H.embodied;glidePace=H.session?.reduced?.24:.42;
+    if(b?.active)b.voiceDrive=glidePace;
+    g.auto=true;g.speed=glidePace;g.walking=true;H.v33RootGlide=true;return true;
+   }
    return start(...args);
   };
   C.stop=(...args)=>{
    const g=H.garden;
-   if(H.v33RootGlide&&g){H.v33RootGlide=false;g.auto=false;g.speed=0;g.walking=false;return;}
+   if(H.v33RootGlide&&g){const b=H.embodied;H.v33RootGlide=false;if(b?.active&&b.voiceDrive===glidePace)b.voiceDrive=0;g.auto=false;g.speed=0;g.walking=false;return;}
    return stop(...args);
   };
+  const manual=H.runManualCommand;
+  if(manual)H.runManualCommand=(...args)=>{if(H.v33RootGlide&&!['algorithm','glitch'].includes(args[0]))C.stop('Manual control');return manual(...args);};
  }
  const dark=new THREE.Color('#0b0d09');
  // Sinking through soil: fine earth and root fibres drifting past the camera while descending.
@@ -23847,7 +23895,12 @@ gl_PointSize=clamp((1.1+level*.9+pulse*1.6)*30./max(1.,d),1.,6.);gl_Position=pro
  H.updateNaturalRealm=(g,a,dt)=>{
   natural?.(g,a,dt);
   const j=H.journey,fog=g.scene?.fog,phase=j?.phase;
-  if(H.v33RootGlide&&phase!=='roots'){H.v33RootGlide=false;g.auto=false;}
+  if(H.v33RootGlide){
+   const b=H.embodied;
+   // Leaving the roots ends the glide (the visitor arrives standing); another movement command takes over from it.
+   if(phase!=='roots'){H.v33RootGlide=false;g.auto=false;if(b?.active&&b.voiceDrive===glidePace)b.voiceDrive=0;}
+   else if(b?.active?b.voiceDrive!==glidePace:!g.auto)H.v33RootGlide=false;
+  }
   if(soilScene!==g.scene){soilScene=g.scene;g.scene.add(soil);}
   const sinking=phase==='descending',step=Math.max(0,Math.min(dt||.016,.1));
   su.amount.value+=((sinking?1:0)-su.amount.value)*(1-Math.exp(-step*(sinking?2.5:1.2)));soil.visible=su.amount.value>.01;
@@ -29176,7 +29229,7 @@ totalEmissiveRadiance=v47c*v47e+vec3(1.,.54,.17)*v47b*.5;}
   ['fly',()=>[T('Fly opp','Fly up'),T('Se hagen ovenfra. Velg igjen for å lande.','See the garden from above. Choose again to land.')],()=>{const up=(H.garden?.camera?.position?.y||0)>8;H.runManualCommand?.(up?'land':'fly');}],
   // Ingrid 23 Nov: "we need the users to be able to enter cinematic mode" (the garden's own V26 cinematic camera, which
   // until now had its button only in the hidden bar). Label wording by Claude.
-  ['film',()=>[H.cinematic?.active?T('Stopp filmmodus','Stop cinematic mode'):T('Filmmodus','Cinematic mode'),T('Hagen filmer seg selv langs stien. Si «cinematic» eller trykk C. Esc eller en piltast gir deg styringen tilbake.','The garden films itself along the path. Say “cinematic” or press C. Esc or an arrow key gives you back control.')],()=>{const C=H.cinematic;if(C)C.active?C.stop('Stopped'):C.start();}],
+  ['film',()=>[(H.cinematic?.active||H.v33RootGlide)?T('Stopp filmmodus','Stop cinematic mode'):T('Filmmodus','Cinematic mode'),T('Hagen filmer seg selv langs stien. Si «cinematic» eller trykk C. Esc eller en piltast gir deg styringen tilbake.','The garden films itself along the path. Say “cinematic” or press C. Esc or an arrow key gives you back control.')],()=>{const C=H.cinematic;if(C)(C.active||H.v33RootGlide)?C.stop('Stopped'):C.start();}],
   ['views',()=>[T('Se under den levende hagen','Look beneath the living garden'),T('Algoritme og glitch: nettet og bruddene.','Algorithm and glitch: the net and its breaks.')],()=>bar(/Garden views|Visninger|^View:/i)?.click()],
   ['controls',()=>[T('Lyd, stemme og kamera','Sound, voice and camera'),T('Mikrofon, din egen musikk, vær og fortelling.','Microphone, your own music, weather and narration.')],()=>bar(/^(Innstillinger|Settings|Controls|Kontroller)$/i)?.click()],
   ['quiet',()=>[T('Hagens lyd','The garden’s sound'),soundPlaying()?T('Slå av lyden.','Turn sound off.'):T('Slå på lyden.','Turn sound on.')],
@@ -29192,7 +29245,7 @@ totalEmissiveRadiance=v47c*v47e+vec3(1.,.54,.17)*v47b*.5;}
   ['stemmen','voice','engelske ord: «walk», «stop», «look down»','say “walk”, “stop”, “look down”']];
  // C turns the cinematic mode on and off (not during the opening film, not on the title page, not while typing)
  addEventListener('keydown',e=>{if((e.key==='c'||e.key==='C')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.target?.closest?.('input,select,textarea,[contenteditable="true"]')){
-  if(H.entryCovered||H.session?.mode==='waiting'||H.v46Intro?.active)return;const C=H.cinematic;if(!C)return;e.preventDefault();C.active?C.stop('Stopped'):C.start();}});
+  if(H.entryCovered||H.session?.mode==='waiting'||H.v46Intro?.active)return;const C=H.cinematic;if(!C)return;e.preventDefault();(C.active||H.v33RootGlide)?C.stop('Stopped'):C.start();}});// 27 Nov (#37): also below
  const TOUCHKEYS=[['hold en finger i ro','hold a finger still','gå','walk'],['dra','drag','se deg rundt','look around'],
   ['to raske trykk','two quick taps','gå av seg selv / stå','walk on its own / stop'],['sirkelen i hjørnet','the circle in the corner','alt annet','everything else']];
  const touchy=()=>matchMedia('(pointer:coarse)').matches||document.body.hasAttribute('data-hagen-touch-v46');
@@ -30703,7 +30756,8 @@ window.addEventListener('pagehide',event=>{if(!event.persisted)HAGEN.dispose();}
   const fr=doc.createElement('iframe');fr.id='hagen-shell-scene';fr.title='HAGEN · Norskehavet';fr.src=PAGE;fr.allow='autoplay; fullscreen; gamepad';
   // (the title page hides every iframe until the garden is entered: this one is shown explicitly)
   fr.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483601;background:transparent;visibility:visible;opacity:0;transition:opacity 1.8s ease;pointer-events:none';
-  fr.addEventListener('load',()=>{try{if(E.frame===fr)fr.contentWindow.focus();}catch{}});doc.body.append(fr);return fr;
+  // 27 Nov (#36): F inside Norskehavet acts on the same fullscreen as everywhere else in Hagen.
+  fr.addEventListener('load',()=>{hagenAdoptFullscreen(fr);try{if(E.frame===fr)fr.contentWindow.focus();}catch{}});doc.body.append(fr);return fr;
  }
  // Performance (24 Nov, Ingrid's brief "STRICT PERFORMANCE OPTIMISATION ONLY"; "fix the rest"): the scene's own start (its
  // graphics context, models and shaders, measured 5 to 13 s, freezing the garden meanwhile) used to begin only when the shell
