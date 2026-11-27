@@ -9915,7 +9915,11 @@ function embodiedUi(){
  #hagen-voice-help p{margin:0;white-space:pre-line;overflow-wrap:anywhere}
  body[data-hagen-voice-help=true] #hagen-soil-reading,body[data-hagen-voice-help=true] #hagen-dream-layer,body[data-hagen-voice-help=true] #hagen-body-caption,body[data-hagen-voice-help=true] #hagen-poetry-reader{visibility:hidden!important}
  @media(max-height:550px){#hagen-voice-help{padding:16px;font-size:14px;line-height:1.4}#hagen-voice-help h2{margin-bottom:10px}}
- body[data-hagen-embodied=active] [data-embodied-hide],body[data-hagen-embodied=active] button,body[data-hagen-embodied=active] input,body[data-hagen-embodied=active] select,body[data-hagen-embodied=active] textarea,body[data-hagen-embodied=active] summary{display:none!important}
+ body[data-hagen-embodied=active] [data-embodied-hide],body[data-hagen-embodied=active] :is(button,input,select,textarea,summary):not(:is(#hagen-v46-hub,#hagen-patterns,#hagen-traces,#hagen-poetry-reader,#hagen-ways-in,#hagen-voice-help,#hagen-music-dialog,#hagen-gamepad-settings) *){display:none!important}
+ /* 26 Nov (#35; Ingrid: "no opportunity to upload your own music ... help ... cinematic mode", "You have to be able to get
+    out"): with voice on, the rule above hid every button, so the circle showed only its key list and the panels it opens
+    (views, trace, ways in, poems, the voice guide) had no choices and no Close while voice waited. The circle and the
+    panels a visitor opens from it now look as they do without voice; the garden's own hints stay hidden as before. */
  body[data-hagen-embodied=active]{cursor:none}body[data-hagen-embodied=active] #hagen-body-setup{cursor:auto}
  body[data-hagen-embodied=active] #hagen-body-setup button{display:inline-flex!important}body[data-hagen-embodied=active] #hagen-body-setup input{display:inline!important}
  #hagen-body-setup [data-resume][hidden],#hagen-body-setup [data-preview-help][hidden]{display:none!important}
@@ -25379,6 +25383,31 @@ AR.Detector.prototype.rotate2 = function (src, rotation) {
   const right=new T.Vector3(-dir.z,0,dir.x),w=cam.clone().addScaledVector(right,side).addScaledVector(dir,ahead);
   const l=c.root.worldToLocal(w.clone());place={chunk:c.index,x:l.x,z:l.z};if(obj){obj.group.removeFromParent();obj=null;}
  }
+ // 27 Nov (Ingrid: "I think the shell should be farther away from the path. Because it keeps coming in the audio into
+ // every root and everything ... further to the edge ... Lagging behind a tree, so it doesn't interfere with exploring
+ // the garden. You should just come over it when you're exploring"). Measured: it lay 18 m ahead / 8 m right of the
+ // arrival, and after the roots it moved beside the visitor, so on coming up its song and its preparation (2-3 s of
+ // hitches) fell on the root exit. It now lies just behind a tree at the garden's outer edge: the tree farthest from
+ // the path (at least 10 m out) that is 15 m or more from every root opening and 20-70 m from where the visitor
+ // arrives, on the far side of the trunk as seen from the path. The same tree every time (the garden is seeded).
+ // ?shell=side restores the 26 Nov place. Shell, crab, song and the sea scene are unchanged.
+ function placeAtEdge(g){
+  if(!g)return false;const c=g.chunks.get(g.activeIndex)||g.chunks.values().next().value;if(!c?.trees?.length)return false;
+  const cam=new T.Vector3();g.camera.getWorldPosition(cam);const start=c.root.worldToLocal(cam.clone());
+  let best=null;
+  for(const t of c.trees){
+   // (inside the planted garden's outer band, 10-16 m from the path: farther out the ground is bare and reads as the
+   // world's edge; a thick trunk is preferred so it really hides the shell from the path)
+   const out=t.x-gardenWorldPath(t.z+c.offset),side=Math.sign(out)||1;if(Math.abs(out)<10||Math.abs(out)>16)continue;
+   const x=t.x+side*(t.r+.6),z=t.z,fromStart=Math.hypot(x-start.x,z-start.z);if(fromStart<20||fromStart>70)continue;
+   if((c.portals||[]).some(p=>Math.hypot(p.x-x,p.z-z)<15))continue;
+   if(c.trees.some(o=>o!==t&&Math.hypot(o.x-x,o.z-z)<o.r+.5))continue;
+   const score=t.r*12+Math.abs(out)*.5-Math.max(0,fromStart-45)*.2;if(!best||score>best.score)best={x,z,score,tree:t};
+  }
+  if(!best)return false;place={chunk:c.index,x:best.x,z:best.z,edge:true};if(obj){obj.group.removeFromParent();obj=null;}
+  S.edgePlace={x:+best.x.toFixed(1),z:+(best.z+c.offset).toFixed(1),fromPath:+Math.abs(best.x-gardenWorldPath(best.z+c.offset)).toFixed(1),tree:{x:+best.tree.x.toFixed(1),r:+best.tree.r.toFixed(2)}};
+  return true;
+ }
  function buildObject(c){
   const g=new T.Group();g.name='V46 threshold: the conch';
   const x=place.x,z=place.z,y=gardenWorldHeight(x,z+c.offset);
@@ -25835,15 +25864,20 @@ AR.Detector.prototype.rotate2 = function (src, rotation) {
   // 26 Nov evening (#22/#25, Ingrid: "the shell should have a little lower volume in the garden because it's overpowering" /
   // "the sea sound keeps popping in suddenly in the garden"): the sea rush was heard up to 30 m away at up to .26. It is now
   // quieter and only close by: up to .12, fading in from 14 m.
-  const breath=.75+.25*Math.sin(performance.now()/1000*.7);AU.levels.rush=.12*breath*(1-ss(3,14,d));auSet(AU.rush,AU.levels.rush,.5);
+  // 27 Nov (Ingrid: "the sound of the shell is fucking up when you're walking around ... it's messing with the vibe ...
+  // it's too loud ... a little bit not scratchy, but it comes so suddenly. And it breaks with the ambience in the
+  // garden"; she chose "Silent until taken up"): in the garden the shell makes no sound at all. No noise rush; the song
+  // begins only when the visitor takes the shell up ("listen" or touch) and rises softly with the pull into Norskehavet,
+  // which continues from the same point in the song. (The rush and the song inside the ending are unchanged.)
+  AU.levels.rush=0;auSet(AU.rush,0,.5);
   // 26 Nov (Ingrid: "it should have a faint singing, very, very faint of the song that is playing inside of it ... when
   // you come closer to it, you hear it just a bit ... and when you go into it, it volumes up with the movement"): the
   // same song, from the shell's place, muffled and barely there from about 20 m, a little clearer close by; it rises
   // while the shell draws the visitor in. Norskehavet then carries on from the same point in the song (songStartedAt).
-  if(d<22&&AU.buffer&&!AU.songStarted){auSongStart();AU.songStartedAt=AU.ctx.currentTime;}
-  const pulling=!!H.v47Shell?.pull,close=1-ss(2.5,14,d);
-  auAt(AU.songP,tmp.x,tmp.y+.3,tmp.z);AU.songF.frequency.setTargetAtTime(pulling?3200:350+1400*close*close,AU.ctx.currentTime,.6);
-  AU.levels.song=pulling?.6:.08*close*close;auSet(AU.song,AU.levels.song,pulling?.9:.7);
+  const pulling=!!H.v47Shell?.pull;
+  if(pulling&&AU.buffer&&!AU.songStarted){auSongStart();AU.songStartedAt=AU.ctx.currentTime;}
+  auAt(AU.songP,tmp.x,tmp.y+.3,tmp.z);AU.songF.frequency.setTargetAtTime(pulling?3200:350,AU.ctx.currentTime,pulling?1.2:.6);
+  AU.levels.song=pulling?.6:0;auSet(AU.song,AU.levels.song,pulling?1.6:.7);
   auSet(AU.rain,0);auSet(AU.deep,0);
  }
  // During the ending.
@@ -26038,12 +26072,13 @@ AR.Detector.prototype.rotate2 = function (src, rotation) {
    const phase=H.journey?.phase,surface=phase==='surface';
    // The paper comes only after the roots: when the visitor is back on the surface.
    if(phase==='roots')S.rootsVisited=true;
-   if(S.rootsVisited&&surface&&prevPhase&&prevPhase!=='surface'&&!S.cameUpPlaced){S.cameUpPlaced=true;placeNear(g);}
+   // (27 Nov: it no longer comes to the visitor after the roots; ?shell=follow keeps that earlier behaviour reachable)
+   if(qs.get('shell')==='follow'&&S.rootsVisited&&surface&&prevPhase&&prevPhase!=='surface'&&!S.cameUpPlaced){S.cameUpPlaced=true;placeNear(g);}
    // 26 Nov (Ingrid chose "Findable from the start"; her words of 21 Nov: the shell "should be able to be found ...
    // findable by chance, never required"; "not in the middle of the garden, but like a little bit on the side ... you
    // stumble over it"): on arrival it lies off to the side, about 18 m ahead and 8 m to the right of the first view.
    // After a visit to the roots it still comes to the visitor as before.
-   if(!place&&!S.startPlaced&&surface&&!H.entryCovered&&!H.v46Intro?.active){S.startPlaced=true;placeNear(g,8,18);}
+   if(!place&&!S.startPlaced&&surface&&!H.entryCovered&&!H.v46Intro?.active){S.startPlaced=true;if(qs.get('shell')==='side'||!placeAtEdge(g))placeNear(g,8,18);}
    prevPhase=phase;
    const c=place?g.chunks.get(place.chunk):null;
    if(c&&(!obj||obj.chunk!==c)){if(obj)obj.group.removeFromParent();obj=buildObject(c);}
@@ -26665,6 +26700,8 @@ if(S.forceInto)S.trigger('walk-in');
   stutter=ctx.createDelay(1);stutter.delayTime.value=.09;stutterFb=ctx.createGain();stutterFb.gain.value=0;stutterWet=ctx.createGain();stutterWet.gain.value=0;
   natureIn.connect(crush);crush.connect(stutter);stutter.connect(stutterFb);stutterFb.connect(stutter);stutter.connect(stutterWet);stutterWet.connect(master);
   for(const name of Object.keys(FILES)){const g=ctx.createGain();g.gain.value=0;g.connect(name==='waves'?seaFilter:name==='hum'?humFilter:NATURE.has(name)?natureIn:master);bus[name]=g;A.levels[name]=0;}
+  // (27 Nov: the existing nodes are exposed read-only for the additive underground layers below; nothing here changes)
+  A.nodes={ctx,master,bus};
   return true;
  }
  // Glitch view: the nature sounds break in uneven chops of 50-270 ms: a drop-out, a stutter (the last 45-180 ms repeat
@@ -26803,6 +26840,64 @@ if(S.forceInto)S.trigger('walk-in');
  H.updateNaturalRealm=(g,a,dt)=>{natural?.(g,a,dt);try{update(g,dt);}catch(e){A.error=String(e);}};
  // Silence at once when the listening garden is switched off.
  const lg=H.listeningGarden;if(lg?.disableSound){const off=lg.disableSound;lg.disableSound=(...x)=>{if(master&&ctx)master.gain.setTargetAtTime(0,ctx.currentTime,.15);A.enabled=false;return off(...x);};}
+})();
+
+// 27 Nov (EXPERIMENTAL, branch underground-2026-11-27; Ingrid: "the ambient sonic identities of Garden, Algorithm and
+// Glitch must also function underground ... These perspectives should influence the underground sound without replacing
+// its existing atmosphere"; "The Glitch processing must be additive. Retain the original underground soundscape beneath
+// the processed layer"; "keep whats there of ambience already, only add"). Layers ADDED on top of the V45 underground
+// sound; creak, drips and resonance keep exactly their levels and their own path to the output.
+//  - Garden below: unchanged.
+//  - Algorithm below: the same data-centre recording as on the surface, heard through earth (low-pass), well under the roots.
+//  - Glitch below: a parallel send of the three root sounds into a stepped wave-shaper and a short stuttering delay; only
+//    this wet layer is chopped, the dry underground sound is never cut.
+// Crossfades on view changes and on going down or coming up. Start levels about -12 dB under the root layers (headroom).
+// Every value is an initial tuning value for Ingrid's listening: HAGEN.ambienceBelow.config. ?belowviews=0 = today's sound.
+(()=>{
+ let off=false;try{off=/[?&]belowviews=0/.test(location.search+'&'+parent.location.search);}catch{off=/[?&]belowviews=0/.test(location.search);}
+ if(off)return;
+ const C={datacenter:.06,dcLowpass:500,glitchSend:.3,glitchWet:.4,glitchFeedback:.5,fade:1.5};
+ const B=H.ambienceBelow={config:C,levels:{datacenter:0,glitch:0},active:'',error:null};
+ let ctx=null,dcLP=null,dcGain=null,dcSrc=null,send=null,crush=null,stut=null,fb=null,wet=null,wetMaster=null,next=0,wired=false,wetTarget=-1;
+ function wire(){
+  const N=H.ambience?.nodes;if(!N?.ctx)return false;if(wired&&ctx===N.ctx)return true;
+  ctx=N.ctx;
+  dcLP=ctx.createBiquadFilter();dcLP.type='lowpass';dcLP.frequency.value=C.dcLowpass;dcLP.Q.value=.5;dcGain=ctx.createGain();dcGain.gain.value=0;dcLP.connect(dcGain);dcGain.connect(N.master);
+  send=ctx.createGain();send.gain.value=C.glitchSend;
+  crush=ctx.createWaveShaper();const steps=10,curve=new Float32Array(1024);for(let i=0;i<1024;i++){const x=i/511.5-1;curve[i]=Math.round(x*steps)/steps;}crush.curve=curve;
+  stut=ctx.createDelay(1);stut.delayTime.value=.09;fb=ctx.createGain();fb.gain.value=0;wet=ctx.createGain();wet.gain.value=0;wetMaster=ctx.createGain();wetMaster.gain.value=0;
+  send.connect(crush);crush.connect(stut);stut.connect(fb);fb.connect(stut);stut.connect(wet);wet.connect(wetMaster);wetMaster.connect(N.master);
+  for(const name of ['creak','drips','resonance'])N.bus[name]?.connect(send);   // a parallel tap; their own path is untouched
+  wired=true;return true;
+ }
+ function startDc(){
+  if(dcSrc)return;const buf=H.ambience?.loaded?.datacenter?.[0];if(!buf)return;
+  dcSrc=ctx.createBufferSource();dcSrc.buffer=buf;dcSrc.loop=true;dcSrc.connect(dcLP);dcSrc.start(ctx.currentTime+.05,Math.random()*Math.max(0,buf.duration-1));
+ }
+ function chop(on){
+  const t=ctx.currentTime;
+  if(!on){wet.gain.setTargetAtTime(0,t,.08);fb.gain.setTargetAtTime(0,t,.08);return;}
+  if(t<next)return;const r=Math.random(),mild=!!H.session?.reduced,w=C.glitchWet*(mild?.6:1);
+  if(r<.45){stut.delayTime.setValueAtTime([.045,.07,.09,.135,.18][Math.floor(Math.random()*5)],t);wet.gain.setValueAtTime(w,t);fb.gain.setValueAtTime(C.glitchFeedback*(mild?.6:1),t);}
+  else if(r<.8){wet.gain.setValueAtTime(w*.45,t);fb.gain.setValueAtTime(C.glitchFeedback*.4,t);}
+  else{wet.gain.setValueAtTime(0,t);fb.gain.setValueAtTime(0,t);}
+  next=t+.05+Math.random()*.22;
+ }
+ function update(g){
+  const A=H.ambience;if(!A?.enabled||!wire())return;
+  const deep=A.place==='roots',realms=g?.archive?.realms,view=realms?.phase==='active'?realms.side:'';
+  const duck=Math.max(0,1-.55*(H.poetryReader?.open?1:0)-.6*(H.sensory?.music&&!H.sensory.music.media?.paused?1:0));
+  const t=ctx.currentTime;
+  const dc=deep&&view==='algorithm'?C.datacenter*duck:0;if(dc>0)startDc();
+  dcLP.frequency.setTargetAtTime(C.dcLowpass,t,.5);
+  if(Math.abs(dc-B.levels.datacenter)>.001){dcGain.gain.setTargetAtTime(dc,t,C.fade/3);B.levels.datacenter=dc;}
+  send.gain.setTargetAtTime(C.glitchSend,t,.3);
+  const gl=deep&&view==='glitch'?duck:0;if(Math.abs(gl-wetTarget)>.01){wetMaster.gain.setTargetAtTime(gl,t,C.fade/3);wetTarget=gl;}B.levels.glitch=gl;
+  chop(gl>0);
+  B.active=deep?(view||'garden'):'';
+ }
+ const natural=H.updateNaturalRealm;
+ H.updateNaturalRealm=(g,a,dt)=>{natural?.(g,a,dt);try{update(g);}catch(e){if(!B.error)B.error=String(e);}};
 })();
 
 // V45 night birds, in the garden's particle style (faint additive ribs and a dust of pearl points,
@@ -28398,7 +28493,7 @@ ${colour}totalEmissiveRadiance=v47c*v47e+${v3(C?C[0]:t.tint)}*v47b*${t.body.toFi
   try{
    const ctx=H.v45AudioContext,g=H.garden,A=H.ambience;if(!ctx||!g?.camera)return;
    ensure(ctx);const t=ctx.currentTime;
-   const on=!!(A?.enabled&&H.journey?.phase==='surface'&&!H.v46Intro?.active&&!H.threshold?.running&&!H.v47Shell?.open&&!H.gardenPause?.paused);
+   const on=!!(A?.enabled&&H.journey?.phase==='surface'&&!H.v46Intro?.active&&!H.threshold?.running&&!H.v47Shell?.open&&!H.gardenPause?.paused)&&!H.rootVoices?.enabled;   // (27 Nov: hands over to H.rootVoices below unless ?rootvoices=0)
    const duck=Math.max(0,1-.55*(H.poetryReader?.open?1:0)-.6*(H.sensory?.music&&!H.sensory.music.media?.paused?1:0));
    master.gain.setTargetAtTime(on?S.level*duck:0,t,on?1.2:.5);
    if(!on||!buf){S.playing=0;return;}
@@ -28412,6 +28507,96 @@ ${colour}totalEmissiveRadiance=v47c*v47e+${v3(C?C[0]:t.tint)}*v47b*${t.body.toFi
     p.g.gain.setTargetAtTime(1,t,.8);}
    S.playing=want.length;
   }catch(err){if(!S.error)S.error=String(err);}
+ }
+ setInterval(tick,250);
+})();
+
+// 27 Nov (EXPERIMENTAL, branch underground-2026-11-27): roots as spatial presences, on the surface AND underground.
+// Ingrid: "I want visitors to begin hearing individual roots before reaching them ... Emerge naturally from the surrounding
+// soundscape ... Become more intimate as the visitor approaches. Recede gradually ... Remain spatially connected to the
+// root"; "The proximity-based root sound must work while exploring underground ... Use the actual underground root
+// encounter positions"; "Preserve silence between encounters. Avoid excessive overlapping sounds, abrupt changes or
+// exaggerated stereo effects". One shared pulse (her roots.mp3, as the abyss sound above) in different expressions
+// (approved): Alongside warm, intimate, spacious; Attraction two subtly separated presences (counted as two sources);
+// Pattern lower, steadier, repeating; Mavka higher, lighter, airier; What the roots remember unchanged until she decides.
+// Surface: the openings within 40 m, at most 3 sources. Underground: the root you are in (it stays with you through the
+// descent, then rests at its room) and other roots at their rooms' real positions, heard through earth, at most 2 sources.
+// Distance: HRTF (inverse, as before), a low-pass that opens as you come close, a faint send into a 4-tap reflection
+// network (the listening garden's design), slow gain changes, silence beyond the cut-off. Ducks under poems and her own
+// music; rests in a Quiet visit, the film, the shell scene and a pause. Every value is an initial tuning value for
+// Ingrid's listening: HAGEN.rootVoices.config. ?rootvoices=0 gives back the 23 Nov abyss sound above exactly.
+(()=>{const H=globalThis.HAGEN;if(!H)return;
+ const qs=(()=>{let s=location.search;try{if(parent!==window)s+='&'+parent.location.search.slice(1);}catch{}return s;})();
+ if(/[?&]rootvoices=0/.test(qs)||/[?&]ambience=0/.test(qs))return;
+ const C={levelSurface:.38,levelBelow:.22,maxSurface:3,maxBelow:2,cutoffSurface:40,cutoffBelow:30,near:3,far:20,throughEarth:.6,earthGain:.7,fade:1.5,release:3,
+  reflections:{taps:4,first:.37,step:.56,gain:.13},
+  expressions:{
+   alongside:{rate:.86,lowpass:750,send:.22,gain:1,note:'warm, intimate, spacious'},
+   attraction:{rate:[.84,.89],spread:1.2,lowpass:650,send:.15,gain:.7,note:'two subtly separated presences'},
+   pattern:{rate:.76,lowpass:520,send:.12,gain:.9,repeat:.66,repeatGain:.22,note:'lower, steadier, repeating'},
+   mavka:{rate:.98,lowpass:1300,send:.28,gain:.75,note:'higher, lighter, airier'},
+   remember:{rate:null,lowpass:650,send:0,gain:1,note:'as the 23 Nov abyss sound (playback .82-.90); Ingrid decides'}}};
+ const R=H.rootVoices={enabled:true,config:C,slots:[],sources:0,place:'',error:null};
+ const IDS=['alongside','attraction','pattern','mavka','remember'];
+ const ss=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
+ let ctx=null,buf=null,loading=false,out=null,refl=null;const pool=[];
+ function ensure(c){
+  if(ctx!==c){ctx=c;out=c.createGain();out.gain.value=0;out.connect(c.destination);R.out=out;refl=c.createGain();
+   for(let i=0;i<C.reflections.taps;i++){const d=c.createDelay(4),gg=c.createGain(),p=c.createStereoPanner();d.delayTime.value=C.reflections.first+i*C.reflections.step;gg.gain.value=C.reflections.gain/(1+i*.35);p.pan.value=(i%2?1:-1)*(.2+i*.08);refl.connect(d);d.connect(gg);gg.connect(p);p.connect(out);}
+   pool.length=0;}
+  if(!buf&&!loading){const have=H.ambience?.loaded?.beacon_root?.[0];if(have){buf=have;return;}loading=true;
+   fetch('assets/listening_edition/roots.mp3').then(r=>{if(!r.ok)throw Error('roots.mp3 '+r.status);return r.arrayBuffer();}).then(a=>c.decodeAudioData(a)).then(b=>{buf=b;}).catch(e=>{R.error=String(e);}).finally(()=>{loading=false;});}
+ }
+ function slot(){
+  const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=650;lp.Q.value=.5;
+  const pn=ctx.createPanner();pn.panningModel='HRTF';pn.distanceModel='inverse';pn.refDistance=2.5;pn.rolloffFactor=1.6;pn.maxDistance=45;
+  const g=ctx.createGain();g.gain.value=0;const sendG=ctx.createGain();sendG.gain.value=0;
+  const echo=ctx.createDelay(2);echo.delayTime.value=.66;const echoG=ctx.createGain();echoG.gain.value=0;
+  const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;src.playbackRate.value=.86;
+  src.connect(lp);lp.connect(pn);pn.connect(g);g.connect(out);g.connect(sendG);sendG.connect(refl);g.connect(echo);echo.connect(echoG);echoG.connect(echo);echoG.connect(out);
+  src.start(ctx.currentTime+.05,Math.random()*Math.max(0,buf.duration-1));
+  return {lp,pn,g,sendG,echo,echoG,src,key:null,freeAt:0,expr:'',at:null,target:0,freq:0,d:0};
+ }
+ function wanted(g){
+  const j=H.journey,below=['descending','roots','ascending'].includes(j?.phase),cam=g.camera.position,active=below?j.activeEntrance:null,list=[];
+  for(const c of g.chunks.values())for(const e of c.rootEntrances||[]){
+   const enc=e.portal.encounter??e.portal.group,id=IDS[enc]||'remember',X=C.expressions[id],isActive=!!active&&e===active;
+   let x,y,z;
+   if(isActive&&j.phase!=='roots'){x=cam.x;y=cam.y-.4;z=cam.z;}                                  // with you through the descent / ascent
+   else if(below){const p=entranceWorldPoint(g,e,e.origin);x=p.x;y=p.y+1;z=p.z;}                     // the room's real place below
+   else{x=e.x;y=(e.y||0)+.4;z=e.z+c.offset-g.origin;}                                                 // the opening on the surface
+   const d=Math.hypot(x-cam.x,y-cam.y,z-cam.z);if(!isActive&&d>(below?C.cutoffBelow:C.cutoffSurface))continue;
+   const earth=below&&!isActive,base={key:c.index+':'+enc,id,X,d,x,y,z,earth,isActive};
+   if(id==='attraction'){for(const s of [-1,1])list.push({...base,key:base.key+(s<0?'a':'b'),x:x+s*X.spread,rate:X.rate[s<0?0:1]});}
+   else list.push({...base,rate:X.rate});
+  }
+  list.sort((a,b)=>(b.isActive-a.isActive)||(a.d-b.d));
+  return {below,list:list.slice(0,below?C.maxBelow:C.maxSurface)};
+ }
+ function tick(){
+  try{
+   const c=H.v45AudioContext,g=H.garden,A=H.ambience;if(!c||!g?.camera)return;
+   ensure(c);const t=c.currentTime,phase=H.journey?.phase;
+   const on=!!(A?.enabled&&['surface','descending','roots','ascending'].includes(phase)&&!H.v46Intro?.active&&!H.threshold?.running&&!H.v47Shell?.open&&!H.gardenPause?.paused);
+   const duck=Math.max(0,1-.55*(H.poetryReader?.open?1:0)-.6*(H.sensory?.music&&!H.sensory.music.media?.paused?1:0));
+   const W=on&&buf?wanted(g):{below:false,list:[]};R.place=on?(W.below?'below':'surface'):'';
+   out.gain.setTargetAtTime(on?(W.below?C.levelBelow:C.levelSurface)*duck:0,t,on?C.fade/2:.5);
+   if(!on||!buf){R.sources=0;return;}
+   while(pool.length<4)pool.push(slot());
+   for(const p of pool)if(p.key&&!W.list.some(w=>w.key===p.key)){p.g.gain.setTargetAtTime(0,t,C.release/3);p.key=null;p.freeAt=t+C.release;p.target=0;}
+   for(const w of W.list){
+    let p=pool.find(q=>q.key===w.key);
+    if(!p){p=pool.find(q=>!q.key&&t>=q.freeAt);if(!p)continue;p.key=w.key;p.expr=w.id;
+     p.src.playbackRate.setValueAtTime(w.rate??(.82+Math.random()*.08),t);p.echo.delayTime.setValueAtTime(w.X.repeat||.66,t);}
+    const pos=[w.x,w.y,w.z],tau=W.below?.4:.1;
+    if(p.pn.positionX){p.pn.positionX.setTargetAtTime(pos[0],t,tau);p.pn.positionY.setTargetAtTime(pos[1],t,tau);p.pn.positionZ.setTargetAtTime(pos[2],t,tau);}else p.pn.setPosition?.(...pos);
+    const close=1-ss(C.near,C.far,w.d),f=w.X.lowpass*(1+2*close)*(w.earth?C.throughEarth:1);
+    p.lp.frequency.setTargetAtTime(f,t,.5);p.target=w.X.gain*(w.earth?C.earthGain:1);p.g.gain.setTargetAtTime(p.target,t,C.fade/3);
+    p.sendG.gain.setTargetAtTime(w.X.send||0,t,.5);p.echoG.gain.setTargetAtTime(w.X.repeatGain||0,t,.5);
+    p.at=pos.map(v=>+v.toFixed(2));p.freq=Math.round(f);p.d=+w.d.toFixed(1);
+   }
+   R.sources=W.list.length;R.slots=pool.filter(p=>p.key).map(p=>({key:p.key,expr:p.expr,at:p.at,d:p.d,gain:+p.target.toFixed(2),lowpass:p.freq}));
+  }catch(err){if(!R.error)R.error=String(err);}
  }
  setInterval(tick,250);
 })();
@@ -28992,7 +29177,7 @@ totalEmissiveRadiance=v47c*v47e+vec3(1.,.54,.17)*v47b*.5;}
   // Ingrid 23 Nov: "we need the users to be able to enter cinematic mode" (the garden's own V26 cinematic camera, which
   // until now had its button only in the hidden bar). Label wording by Claude.
   ['film',()=>[H.cinematic?.active?T('Stopp filmmodus','Stop cinematic mode'):T('Filmmodus','Cinematic mode'),T('Hagen filmer seg selv langs stien. Si «cinematic» eller trykk C. Esc eller en piltast gir deg styringen tilbake.','The garden films itself along the path. Say “cinematic” or press C. Esc or an arrow key gives you back control.')],()=>{const C=H.cinematic;if(C)C.active?C.stop('Stopped'):C.start();}],
-  ['views',()=>[T('Se under den levende hagen','Look beneath the living garden'),T('Algoritme og glitch: nettet og bruddene.','Algorithm and glitch: the net and its breaks.')],()=>bar(/Garden views|Visninger/i)?.click()],
+  ['views',()=>[T('Se under den levende hagen','Look beneath the living garden'),T('Algoritme og glitch: nettet og bruddene.','Algorithm and glitch: the net and its breaks.')],()=>bar(/Garden views|Visninger|^View:/i)?.click()],
   ['controls',()=>[T('Lyd, stemme og kamera','Sound, voice and camera'),T('Mikrofon, din egen musikk, vær og fortelling.','Microphone, your own music, weather and narration.')],()=>bar(/^(Innstillinger|Settings|Controls|Kontroller)$/i)?.click()],
   ['quiet',()=>[T('Hagens lyd','The garden’s sound'),soundPlaying()?T('Slå av lyden.','Turn sound off.'):T('Slå på lyden.','Turn sound on.')],
    ()=>soundPlaying()?H.listeningGarden.disableSound():H.listeningGarden?.enableSound()],
@@ -30339,7 +30524,12 @@ totalEmissiveRadiance=v47c*v47e+vec3(1.,.54,.17)*v47b*.5;}
 
 H.tick=currentRuntime=>{
  H.runtime=currentRuntime;if(H.gardenPause?.paused){H.lastFrameAt=performance.now();H.gardenPause.holdAudio();return;}if(H.disposed||document.hidden)return;
- if(H.entryCovered&&H.exhibitionAccess?.started&&H.gardenQuality?.assetsSettled&&H.quickProfile?.phase==="ready"&&H.bootTiming?.firstRender!==undefined&&H.v39WarmDone&&!H.frontYear?.active)return;
+ // 26 Nov late evening (Ingrid: "The garden must open even when microphone access is denied, unavailable or blocked by
+ // the embedding website"): while the film covers the garden, drawing rests once everything is ready. Without a
+ // microphone request (Quiet visit, or a frame that blocks the microphone) the visit only leaves "waiting" at that same
+ // moment, so the garden's own switch from "start" to the path, which happens while drawing, never came, and the
+ // entrance waited forever. Drawing now rests only once the garden has left "start".
+ if(H.entryCovered&&H.exhibitionAccess?.started&&H.gardenQuality?.assetsSettled&&H.quickProfile?.phase==="ready"&&H.bootTiming?.firstRender!==undefined&&H.v39WarmDone&&!H.frontYear?.active&&H.journey?.phase!=='start')return;
  const budgetNow=performance.now(),minimumTick=H.quickGarden&&H.quickProfile?.phase!=="ready"?50:0;if(!H.vr?.active&&budgetNow-(H.budgetTickAt||0)<minimumTick)return;H.budgetTickAt=budgetNow;
  const now=performance.now(),elapsed=H.lastFrameAt?Math.max(.001,(now-H.lastFrameAt)/1000):(currentRuntime.dt||1/60);
  H.lastFrameAt=now;const dt=clamp(elapsed,.001,.05);
@@ -30608,14 +30798,19 @@ window.addEventListener('pagehide',event=>{if(!event.persisted)HAGEN.dispose();}
    // (#33: preparation may begin during the approach, within 12 m of the shell, on foot; the movement test below leaves out
    // running and flying past)
    const w=T?.shellWorld,dShell=w&&g?.player?Math.hypot(w.x-g.player.x,w.z-g.player.z):1e9;
-   const by=q.get('prepareshell')!=='0'&&!!T&&(!!T.near||dShell<12)&&!H.cinematic?.drone&&T.armed&&!T.running&&!E.open&&H.journey?.phase==='surface'&&!H.v46Intro?.active&&!H.entryCovered&&!!cam;
+   const by=q.get('prepareshell')!=='0'&&!!T&&(!!T.near||dShell<12)&&!H.cinematic?.drone&&!H.cinematic?.active&&T.armed&&!T.running&&!E.open&&H.journey?.phase==='surface'&&!H.v46Intro?.active&&!H.entryCovered&&!!cam;
    // 26 Nov evening (#33, Ingrid: "approaching the shell into it is still have a lag"): measured, the sea scene's start-up
    // (~8 s of work) ran during the pull when it had not been prepared: 6.1 s to the scene, a 2.1 s frozen frame. The old
    // test (under 2 cm camera movement per frame for 1.5 s) rarely passed, so preparation seldom happened. Now: within reach
    // of the shell for 1 s with small movement (under 6 cm per frame); kept prepared unless away for 20 s (was 8 s).
-   if(by){const moved=E.lastCam?cam.distanceTo(E.lastCam):1;E.still=moved<.06?(E.still||0)+step:0;(E.lastCam||(E.lastCam=cam.clone())).copy(cam);E.away=0;
+   // 26 Nov late evening (B12, approved by Ingrid: "Only genuine stillness near the shell should trigger preparation.
+   // Walking, running or flying past must not cause a freeze."): measured, the earlier camera test (under 6 cm per frame)
+   // also passed when running at 70-144 fps, and the preparation froze the garden 1.5-2.1 s as the visitor ran past.
+   // Stillness is now the visitor's own speed over time: under 0.15 m/s for 1 s within reach of the shell (looking
+   // around while standing still counts as still). Never while flying or in cinematic mode.
+   if(by){const p=g.player,moved=E.lastPos?Math.hypot(p.x-E.lastPos.x,p.z-E.lastPos.z):1e9,speed=step>0?moved/step:1e9;E.still=speed<.15?(E.still||0)+step:0;E.lastPos={x:p.x,z:p.z};E.away=0;
     if(E.still>1&&!E.prep)prepare();}
-   else{E.still=0;E.lastCam=null;if(E.prep&&!E.open){E.away=(E.away||0)+step;if(E.away>20)unprepare();}}
+   else{E.still=0;E.lastPos=null;if(E.prep&&!E.open){E.away=(E.away||0)+step;if(E.away>20)unprepare();}}
   }catch(e){if(!E.error)E.error=String(e);}
   try{
    if(q.get('ending')==='1'&&!E.tested&&H.exhibitionAccess?.started&&!H.entryCovered&&H.journey?.phase==='surface'&&!H.v46Intro?.active){
